@@ -24,9 +24,19 @@ export class WslTarget implements BackendTarget {
   }
 
   spawn(command: string, args: string[], cwd: string): SpawnConfig {
+    const isDefaultShell = command === 'bash' && args.includes('-l')
+    if (isDefaultShell) {
+      return {
+        command: 'wsl.exe',
+        args: ['-d', this.distro, '--cd', cwd, '--', command, ...args],
+        env: process.env as Record<string, string>
+      }
+    }
+    // Wrap other commands in login bash so PATH includes ~/.local/bin etc.
+    const fullCmd = [command, ...args].map((a) => (a.includes(' ') ? `"${a}"` : a)).join(' ')
     return {
       command: 'wsl.exe',
-      args: ['-d', this.distro, '--cd', cwd, '--', command, ...args],
+      args: ['-d', this.distro, '--cd', cwd, '--', 'bash', '-lc', fullCmd],
       env: process.env as Record<string, string>
     }
   }

@@ -97,7 +97,11 @@ export function setupPtyManager(): void {
   })
 
   ipcMain.on('pty:resize', (_event, paneId: string, cols: number, rows: number) => {
-    ptys.get(paneId)?.resize(cols, rows)
+    try {
+      ptys.get(paneId)?.resize(cols, rows)
+    } catch {
+      // PTY may have already exited
+    }
   })
 
   ipcMain.handle('pty:close', (_event, paneId: string) => {
