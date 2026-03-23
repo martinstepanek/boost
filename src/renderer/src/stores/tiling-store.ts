@@ -20,6 +20,7 @@ import {
   updateSplitRatio
 } from '../lib/tiling-tree'
 import { destroyTerminal } from '../lib/pty-registry'
+import { bumpLayoutVersion } from '../lib/layout-version'
 
 interface TilingStore {
   activeWorkspace: number
@@ -523,4 +524,10 @@ export const useTilingStore = create<TilingStore>()(
       return { version: 1, activeWorkspace, workspaces }
     }
   }))
+)
+
+// Bump layout version whenever workspaces change (triggers terminal refits)
+useTilingStore.subscribe(
+  (state) => state.workspaces,
+  () => bumpLayoutVersion()
 )
