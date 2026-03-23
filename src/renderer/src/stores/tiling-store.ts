@@ -15,6 +15,7 @@ import {
   movePaneInDirection,
   removePane,
   splitPane,
+  updatePaneInTree,
   updateSplitRatio
 } from '../lib/tiling-tree'
 import { destroyTerminal } from '../lib/pty-registry'
@@ -40,6 +41,7 @@ interface TilingStore {
   swapFocusedPane(direction: Direction): void
   moveFocusedPaneToWorkspace(n: number): void
   resizeSplit(splitId: string, newRatio: number): void
+  setPaneClaudeSession(paneId: string, sessionId: string): void
   getPersistedState(): PersistedState
 }
 
@@ -322,6 +324,22 @@ export const useTilingStore = create<TilingStore>()(
           layout: updateSplitRatio(ws.layout, splitId, newRatio)
         })
       })
+    },
+
+    setPaneClaudeSession(paneId, sessionId): void {
+      const { workspaces } = get()
+      const newWorkspaces = { ...workspaces }
+      for (const [key, ws] of Object.entries(newWorkspaces)) {
+        if (ws.layout === null) continue
+        const updated = updatePaneInTree(ws.layout, paneId, (pane) => ({
+          ...pane,
+          claudeSessionId: sessionId
+        }))
+        if (updated !== ws.layout) {
+          newWorkspaces[Number(key)] = { ...ws, layout: updated }
+        }
+      }
+      set({ workspaces: newWorkspaces })
     },
 
     getPersistedState(): PersistedState {

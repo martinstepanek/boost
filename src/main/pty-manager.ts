@@ -1,6 +1,8 @@
 import { spawn, IPty } from 'node-pty'
 import { ipcMain, BrowserWindow } from 'electron'
 import { homedir } from 'os'
+import { join } from 'path'
+import { readFile } from 'fs/promises'
 import { PTY_INITIAL_COLS, PTY_INITIAL_ROWS, PTY_TERM_NAME } from '../shared/constants'
 
 const ptys = new Map<string, IPty>()
@@ -22,7 +24,7 @@ function killExisting(paneId: string): void {
   }
 }
 
-function spawnAndRegister(paneId: string, command: string, args: string[], cwd: string): void {
+function spawnAndRegister(paneId: string, command: string, args: string[], cwd: string): number {
   const pty = spawn(command, args, {
     name: PTY_TERM_NAME,
     cols: PTY_INITIAL_COLS,
@@ -44,21 +46,34 @@ function spawnAndRegister(paneId: string, command: string, args: string[], cwd: 
     const win = getMainWindow()
     if (win) win.webContents.send('pty:exit', paneId, exitCode)
   })
+
+  return pty.pid
 }
 
 export function setupPtyManager(): void {
   ipcMain.handle('pty:create', (_event, paneId: string, cwd?: string) => {
     killExisting(paneId)
-    spawnAndRegister(paneId, getDefaultShell(), ['--login'], cwd || homedir())
+    return spawnAndRegister(paneId, getDefaultShell(), ['--login'], cwd || homedir())
   })
 
   ipcMain.handle(
     'pty:createWithCommand',
     (_event, paneId: string, command: string, args: string[], cwd?: string) => {
       killExisting(paneId)
-      spawnAndRegister(paneId, command, args, cwd || homedir())
+      return spawnAndRegister(paneId, command, args, cwd || homedir())
     }
   )
+
+  ipcMain.handle('pty:getClaudeSession', async (_event, pid: number) => {
+    const sessionFile = join(homedir(), '.claude', 'sessions', `${pid}.json`)
+    try {
+      const data = await readFile(sessionFile, 'utf-8')
+      const parsed = JSON.parse(data)
+      return typeof parsed.sessionId === 'string' ? parsed.sessionId : null
+    } catch {
+      return null
+    }
+  })
 
   ipcMain.on('pty:write', (_event, paneId: string, data: string) => {
     ptys.get(paneId)?.write(data)

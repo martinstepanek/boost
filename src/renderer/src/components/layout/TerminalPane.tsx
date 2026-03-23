@@ -20,6 +20,24 @@ import {
   unregisterFitAddon,
   getFitAddon
 } from '../../lib/pty-registry'
+import { useTilingStore } from '../../stores/tiling-store'
+
+const SESSION_POLL_INTERVAL_MS = 2000
+const SESSION_POLL_MAX_ATTEMPTS = 15
+
+function pollForClaudeSession(paneId: string, pid: number): void {
+  let attempts = 0
+  const interval = setInterval(async () => {
+    attempts++
+    const sessionId = await window.pty.getClaudeSession(pid)
+    if (sessionId) {
+      clearInterval(interval)
+      useTilingStore.getState().setPaneClaudeSession(paneId, sessionId)
+    } else if (attempts >= SESSION_POLL_MAX_ATTEMPTS) {
+      clearInterval(interval)
+    }
+  }, SESSION_POLL_INTERVAL_MS)
+}
 
 interface TerminalPaneProps {
   paneId: string
@@ -27,6 +45,7 @@ interface TerminalPaneProps {
   isVisible: boolean
   cwd?: string
   command?: PaneCommand
+  claudeSessionId?: string
 }
 
 export default function TerminalPane({
@@ -34,7 +53,8 @@ export default function TerminalPane({
   isFocused,
   isVisible,
   cwd,
-  command
+  command,
+  claudeSessionId
 }: TerminalPaneProps): React.JSX.Element {
   const containerRef = useRef<HTMLDivElement>(null)
   const terminalRef = useRef<Terminal | null>(null)
@@ -95,14 +115,28 @@ export default function TerminalPane({
     })
 
     registerPty(paneId)
-    const createPty = command
-      ? window.pty.createWithCommand(paneId, command.cmd, command.args, cwd)
-      : window.pty.create(paneId, cwd)
-    createPty.then(() => {
+
+    // Determine what to spawn: resume claude session, start new command, or shell
+    let createPty: Promise<number>
+    if (claudeSessionId) {
+      createPty = window.pty.createWithCommand(paneId, 'claude', ['--resume', claudeSessionId], cwd)
+    } else if (command) {
+      createPty = window.pty.createWithCommand(paneId, command.cmd, command.args, cwd)
+    } else {
+      createPty = window.pty.create(paneId, cwd)
+    }
+
+    const isClaudePane = !!command && command.cmd === 'claude'
+    createPty.then((pid) => {
       if (disposed) return
       ptyReady = true
       fitAddon.fit()
       window.pty.resize(paneId, terminal.cols, terminal.rows)
+
+      // Poll for claude session ID if this is a claude pane
+      if (isClaudePane && !claudeSessionId) {
+        pollForClaudeSession(paneId, pid)
+      }
     })
 
     const inputDisposable = terminal.onData((data) => {

@@ -10,6 +10,7 @@ interface PaneInfo {
   id: string
   cwd: string
   command?: PaneCommand
+  claudeSessionId?: string
 }
 
 export default function TerminalOverlay(): React.JSX.Element {
@@ -20,7 +21,7 @@ export default function TerminalOverlay(): React.JSX.Element {
 
   const focusedPaneId = useTilingStore((s) => s.workspaces[s.activeWorkspace]?.focusedPaneId)
 
-  // Stable string key per pane: id\tcwd\tcmd\targs
+  // Stable string key per pane
   const allPanesKey = useTilingStore((s) => {
     const parts: string[] = []
     for (const ws of Object.values(s.workspaces)) {
@@ -30,7 +31,8 @@ export default function TerminalOverlay(): React.JSX.Element {
         const node = findNode(ws.layout, id)
         const cmd = node?.type === 'pane' && node.command ? node.command.cmd : ''
         const args = node?.type === 'pane' && node.command ? node.command.args.join(' ') : ''
-        parts.push(`${id}\t${ws.cwd}\t${cmd}\t${args}`)
+        const session = node?.type === 'pane' ? (node.claudeSessionId ?? '') : ''
+        parts.push(`${id}\t${ws.cwd}\t${cmd}\t${args}\t${session}`)
       }
     }
     return parts.join('\n')
@@ -39,11 +41,12 @@ export default function TerminalOverlay(): React.JSX.Element {
   const allPanes: PaneInfo[] = useMemo(() => {
     if (!allPanesKey) return []
     return allPanesKey.split('\n').map((line) => {
-      const [id, cwd, cmd, args] = line.split('\t')
+      const [id, cwd, cmd, args, session] = line.split('\t')
       return {
         id,
         cwd,
-        command: cmd ? { cmd, args: args ? args.split(' ') : [] } : undefined
+        command: cmd ? { cmd, args: args ? args.split(' ') : [] } : undefined,
+        claudeSessionId: session || undefined
       }
     })
   }, [allPanesKey])
@@ -59,7 +62,7 @@ export default function TerminalOverlay(): React.JSX.Element {
 
   return (
     <>
-      {allPanes.map(({ id, cwd, command }) => {
+      {allPanes.map(({ id, cwd, command, claudeSessionId }) => {
         const rect = rects.get(id)
         const isVisible = activeSet.has(id) && !!rect && rect.w > 0
         return (
@@ -80,6 +83,7 @@ export default function TerminalOverlay(): React.JSX.Element {
               isVisible={isVisible}
               cwd={cwd}
               command={command}
+              claudeSessionId={claudeSessionId}
             />
           </div>
         )

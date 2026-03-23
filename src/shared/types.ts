@@ -8,6 +8,7 @@ export interface PaneNode {
   id: string
   color: string
   command?: PaneCommand
+  claudeSessionId?: string
 }
 
 export interface SplitNode {

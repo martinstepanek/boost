@@ -263,6 +263,20 @@ export function movePaneInDirection(
   return updateSplit(root)
 }
 
+export function updatePaneInTree(
+  root: TilingNode,
+  paneId: string,
+  updater: (pane: PaneNode) => PaneNode
+): TilingNode {
+  if (root.type === 'pane') {
+    return root.id === paneId ? updater(root) : root
+  }
+  const left = updatePaneInTree(root.children[0], paneId, updater)
+  const right = updatePaneInTree(root.children[1], paneId, updater)
+  if (left === root.children[0] && right === root.children[1]) return root
+  return { ...root, children: [left, right] }
+}
+
 export function extractPane(
   root: TilingNode,
   paneId: string
