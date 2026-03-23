@@ -152,12 +152,12 @@ export default function TerminalPane({
     return () => clearTimeout(timer)
   }, [isVisible, paneId])
 
-  // Focus terminal when pane is focused
+  // Focus terminal when pane is focused or becomes visible
   useEffect(() => {
-    if (isFocused && terminalRef.current) {
+    if (isFocused && isVisible && terminalRef.current) {
       terminalRef.current.focus()
     }
-  }, [isFocused])
+  }, [isFocused, isVisible])
 
   return (
     <div
