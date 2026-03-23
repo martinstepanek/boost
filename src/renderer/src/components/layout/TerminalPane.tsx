@@ -32,7 +32,11 @@ interface TerminalPaneProps {
   isVisible: boolean
 }
 
-export default function TerminalPane({ paneId, isFocused, isVisible }: TerminalPaneProps): React.JSX.Element {
+export default function TerminalPane({
+  paneId,
+  isFocused,
+  isVisible
+}: TerminalPaneProps): React.JSX.Element {
   const containerRef = useRef<HTMLDivElement>(null)
   const terminalRef = useRef<Terminal | null>(null)
 
@@ -41,13 +45,32 @@ export default function TerminalPane({ paneId, isFocused, isVisible }: TerminalP
 
     const terminal = new Terminal({
       cursorBlink: true,
-      fontSize: 14,
-      fontFamily: 'Menlo, Monaco, "Courier New", monospace',
+      fontSize: 13,
+      fontFamily: "'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, monospace",
+      lineHeight: 1.35,
       theme: {
-        background: '#1a1b26',
-        foreground: '#c0caf5',
-        cursor: '#c0caf5',
-        selectionBackground: '#33467c'
+        background: '#1c1c1e',
+        foreground: '#e5e5ea',
+        cursor: '#0a84ff',
+        cursorAccent: '#1c1c1e',
+        selectionBackground: 'rgba(10, 132, 255, 0.3)',
+        selectionForeground: '#f5f5f7',
+        black: '#1c1c1e',
+        red: '#ff453a',
+        green: '#30d158',
+        yellow: '#ffd60a',
+        blue: '#0a84ff',
+        magenta: '#bf5af2',
+        cyan: '#64d2ff',
+        white: '#f5f5f7',
+        brightBlack: '#48484a',
+        brightRed: '#ff6961',
+        brightGreen: '#4cd964',
+        brightYellow: '#ffdc5c',
+        brightBlue: '#409cff',
+        brightMagenta: '#da8aff',
+        brightCyan: '#70d7ff',
+        brightWhite: '#ffffff'
       },
       allowProposedApi: true
     })
@@ -178,8 +201,7 @@ export default function TerminalPane({ paneId, isFocused, isVisible }: TerminalP
       ref={containerRef}
       className="flex-1 h-full"
       style={{
-        border: isFocused ? '2px solid #3b82f6' : '2px solid transparent',
-        padding: '2px'
+        padding: '4px'
       }}
     />
   )

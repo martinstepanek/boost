@@ -13,15 +13,43 @@ export default function WorkspaceBar(): React.JSX.Element {
   const switchWorkspace = useTilingStore((s) => s.switchWorkspace)
 
   return (
-    <div className="flex h-7 bg-gray-800 border-t border-gray-700 items-center px-2 gap-1 shrink-0">
+    <div
+      className="flex items-center shrink-0"
+      style={{
+        height: '32px',
+        padding: '0 12px',
+        gap: '6px',
+        backgroundColor: 'var(--bg-secondary)',
+        borderTop: '1px solid var(--border)'
+      }}
+    >
       {workspaceKeys.map((n) => (
         <button
           key={n}
-          className={`px-3 py-0.5 text-xs font-mono rounded transition-colors ${
-            n === activeWorkspace
-              ? 'bg-blue-600 text-white'
-              : 'bg-gray-700 text-gray-400 hover:bg-gray-600 hover:text-gray-200'
-          }`}
+          style={{
+            padding: '3px 10px',
+            fontSize: '11px',
+            fontFamily: 'var(--font-ui)',
+            fontWeight: 500,
+            borderRadius: '5px',
+            border: 'none',
+            cursor: 'pointer',
+            transition: 'all 120ms ease',
+            backgroundColor: n === activeWorkspace ? 'rgba(10, 132, 255, 0.15)' : 'transparent',
+            color: n === activeWorkspace ? 'var(--accent)' : 'var(--text-secondary)'
+          }}
+          onMouseEnter={(e) => {
+            if (n !== activeWorkspace) {
+              e.currentTarget.style.backgroundColor = 'var(--bg-tertiary)'
+              e.currentTarget.style.color = 'var(--text-primary)'
+            }
+          }}
+          onMouseLeave={(e) => {
+            if (n !== activeWorkspace) {
+              e.currentTarget.style.backgroundColor = 'transparent'
+              e.currentTarget.style.color = 'var(--text-secondary)'
+            }
+          }}
           onClick={() => switchWorkspace(n)}
         >
           {n}

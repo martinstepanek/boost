@@ -8,7 +8,10 @@ interface SplitContainerProps {
   isVisible: boolean
 }
 
-export default function SplitContainer({ split, isVisible }: SplitContainerProps): React.JSX.Element {
+export default function SplitContainer({
+  split,
+  isVisible
+}: SplitContainerProps): React.JSX.Element {
   const containerRef = useRef<HTMLDivElement>(null)
   const resizeSplit = useTilingStore((s) => s.resizeSplit)
 
@@ -63,11 +66,16 @@ export default function SplitContainer({ split, isVisible }: SplitContainerProps
         <TilingContainer node={split.children[0]} isVisible={isVisible} />
       </div>
       <div
-        className="flex-shrink-0 bg-gray-700 hover:bg-blue-500 transition-colors"
         style={{
-          width: isHorizontal ? '4px' : '100%',
-          height: isHorizontal ? '100%' : '4px',
-          cursor: isHorizontal ? 'col-resize' : 'row-resize'
+          flexShrink: 0,
+          width: isHorizontal ? '1px' : '100%',
+          height: isHorizontal ? '100%' : '1px',
+          backgroundColor: 'var(--border)',
+          cursor: isHorizontal ? 'col-resize' : 'row-resize',
+          // Invisible padding for easier grab
+          [isHorizontal ? 'borderLeft' : 'borderTop']: '3px solid transparent',
+          [isHorizontal ? 'borderRight' : 'borderBottom']: '3px solid transparent',
+          backgroundClip: 'content-box'
         }}
         onMouseDown={onMouseDown}
       />

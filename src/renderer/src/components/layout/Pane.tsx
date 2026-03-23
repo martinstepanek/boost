@@ -15,7 +15,6 @@ export default function Pane({ pane, isVisible }: PaneProps): React.JSX.Element 
   )
   const setFocusedPane = useTilingStore((s) => s.setFocusedPane)
 
-  // Report this pane's bounding rect to the overlay
   useEffect(() => {
     const el = ref.current
     if (!el) return
@@ -31,7 +30,6 @@ export default function Pane({ pane, isVisible }: PaneProps): React.JSX.Element 
     const observer = new ResizeObserver(update)
     observer.observe(el)
 
-    // Also update on visibility change
     if (isVisible) {
       requestAnimationFrame(update)
     }
@@ -48,7 +46,7 @@ export default function Pane({ pane, isVisible }: PaneProps): React.JSX.Element 
       ref={ref}
       className="flex-1 flex"
       style={{
-        border: isFocused ? '2px solid #3b82f6' : '2px solid transparent'
+        border: isFocused ? '1px solid var(--border-focus)' : '1px solid transparent'
       }}
       onMouseDown={() => setFocusedPane(pane.id)}
     />

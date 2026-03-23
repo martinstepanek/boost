@@ -22,14 +22,17 @@ function App(): React.JSX.Element {
 
   if (!isLoaded) {
     return (
-      <div className="flex h-screen items-center justify-center bg-gray-900 text-white">
+      <div
+        className="flex h-full items-center justify-center"
+        style={{ backgroundColor: 'var(--bg-primary)', color: 'var(--text-secondary)' }}
+      >
         Loading...
       </div>
     )
   }
 
   return (
-    <div className="flex flex-col h-screen bg-gray-900">
+    <div className="flex flex-col h-full" style={{ backgroundColor: 'var(--bg-primary)' }}>
       {workspaceKeys.map((n) => (
         <div
           key={n}
