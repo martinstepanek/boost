@@ -70,14 +70,12 @@ export default function SplitContainer({
       <div
         style={{
           flexShrink: 0,
-          width: isHorizontal ? '1px' : '100%',
-          height: isHorizontal ? '100%' : '1px',
-          backgroundColor: 'var(--border)',
+          width: isHorizontal ? '0px' : '100%',
+          height: isHorizontal ? '100%' : '0px',
           cursor: isHorizontal ? 'col-resize' : 'row-resize',
-          // Invisible padding for easier grab
+          // Invisible hit area for drag
           [isHorizontal ? 'borderLeft' : 'borderTop']: '3px solid transparent',
-          [isHorizontal ? 'borderRight' : 'borderBottom']: '3px solid transparent',
-          backgroundClip: 'content-box'
+          [isHorizontal ? 'borderRight' : 'borderBottom']: '3px solid transparent'
         }}
         onMouseDown={onMouseDown}
       />

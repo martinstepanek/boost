@@ -75,20 +75,11 @@ export default function TerminalOverlay(): React.JSX.Element {
               top: Math.round(rect?.y ?? 0),
               width: Math.round(rect?.w ?? 0),
               height: Math.round(rect?.h ?? 0),
+              outline: isFocused ? '1px solid var(--border-focus)' : '1px solid var(--border)',
+              outlineOffset: '-1px',
               display: isVisible ? 'flex' : 'none'
             }}
           >
-            {isFocused && (
-              <div
-                style={{
-                  position: 'absolute',
-                  inset: 0,
-                  border: '1px solid var(--border-focus)',
-                  pointerEvents: 'none',
-                  zIndex: 10
-                }}
-              />
-            )}
             <TerminalPane
               paneId={id}
               isFocused={id === focusedPaneId}
