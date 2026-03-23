@@ -1,9 +1,16 @@
 import { useMemo, useSyncExternalStore } from 'react'
 import { useShallow } from 'zustand/shallow'
 import { useTilingStore } from '../../stores/tiling-store'
-import { getAllPaneIds } from '../../lib/tiling-tree'
+import { getAllPaneIds, findNode } from '../../lib/tiling-tree'
 import { paneRectStore } from '../../lib/pane-rect-store'
 import TerminalPane from './TerminalPane'
+import type { PaneCommand } from '../../../../shared/types'
+
+interface PaneInfo {
+  id: string
+  cwd: string
+  command?: PaneCommand
+}
 
 export default function TerminalOverlay(): React.JSX.Element {
   const rects = useSyncExternalStore(
@@ -13,24 +20,31 @@ export default function TerminalOverlay(): React.JSX.Element {
 
   const focusedPaneId = useTilingStore((s) => s.workspaces[s.activeWorkspace]?.focusedPaneId)
 
-  // Build a stable string key of "id:cwd" pairs to avoid new-object-per-render
+  // Stable string key per pane: id\tcwd\tcmd\targs
   const allPanesKey = useTilingStore((s) => {
     const parts: string[] = []
     for (const ws of Object.values(s.workspaces)) {
       if (ws.layout === null) continue
       const ids = getAllPaneIds(ws.layout)
       for (const id of ids) {
-        parts.push(`${id}:${ws.cwd}`)
+        const node = findNode(ws.layout, id)
+        const cmd = node?.type === 'pane' && node.command ? node.command.cmd : ''
+        const args = node?.type === 'pane' && node.command ? node.command.args.join(' ') : ''
+        parts.push(`${id}\t${ws.cwd}\t${cmd}\t${args}`)
       }
     }
-    return parts.join('|')
+    return parts.join('\n')
   })
 
-  const allPanes = useMemo(() => {
+  const allPanes: PaneInfo[] = useMemo(() => {
     if (!allPanesKey) return []
-    return allPanesKey.split('|').map((entry) => {
-      const idx = entry.indexOf(':')
-      return { id: entry.slice(0, idx), cwd: entry.slice(idx + 1) }
+    return allPanesKey.split('\n').map((line) => {
+      const [id, cwd, cmd, args] = line.split('\t')
+      return {
+        id,
+        cwd,
+        command: cmd ? { cmd, args: args ? args.split(' ') : [] } : undefined
+      }
     })
   }, [allPanesKey])
 
@@ -45,7 +59,7 @@ export default function TerminalOverlay(): React.JSX.Element {
 
   return (
     <>
-      {allPanes.map(({ id, cwd }) => {
+      {allPanes.map(({ id, cwd, command }) => {
         const rect = rects.get(id)
         const isVisible = activeSet.has(id) && !!rect && rect.w > 0
         return (
@@ -65,6 +79,7 @@ export default function TerminalOverlay(): React.JSX.Element {
               isFocused={id === focusedPaneId}
               isVisible={isVisible}
               cwd={cwd}
+              command={command}
             />
           </div>
         )

@@ -6,6 +6,7 @@ import TilingContainer from './components/layout/TilingContainer'
 import TerminalOverlay from './components/layout/TerminalOverlay'
 import WorkspaceBar from './components/workspace/WorkspaceBar'
 import WorkspaceSetup from './components/workspace/WorkspaceSetup'
+import CommandPalette from './components/CommandPalette'
 
 function App(): React.JSX.Element {
   const { isLoaded } = usePersistence()
@@ -52,6 +53,7 @@ function App(): React.JSX.Element {
         )
       })}
       <TerminalOverlay />
+      <CommandPalette />
       <WorkspaceBar />
     </div>
   )

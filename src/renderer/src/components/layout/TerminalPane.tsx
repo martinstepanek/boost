@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react'
 import { Terminal } from '@xterm/xterm'
 import { FitAddon } from '@xterm/addon-fit'
 import '@xterm/xterm/css/xterm.css'
+import type { PaneCommand } from '../../../../shared/types'
 import {
   TERMINAL_FONT_SIZE,
   TERMINAL_LINE_HEIGHT,
@@ -25,13 +26,15 @@ interface TerminalPaneProps {
   isFocused: boolean
   isVisible: boolean
   cwd?: string
+  command?: PaneCommand
 }
 
 export default function TerminalPane({
   paneId,
   isFocused,
   isVisible,
-  cwd
+  cwd,
+  command
 }: TerminalPaneProps): React.JSX.Element {
   const containerRef = useRef<HTMLDivElement>(null)
   const terminalRef = useRef<Terminal | null>(null)
@@ -92,7 +95,10 @@ export default function TerminalPane({
     })
 
     registerPty(paneId)
-    window.pty.create(paneId, cwd).then(() => {
+    const createPty = command
+      ? window.pty.createWithCommand(paneId, command.cmd, command.args, cwd)
+      : window.pty.create(paneId, cwd)
+    createPty.then(() => {
       if (disposed) return
       ptyReady = true
       fitAddon.fit()

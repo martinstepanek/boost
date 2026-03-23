@@ -10,6 +10,12 @@ process.once('loaded', () => {
 const ptyAPI = {
   create: (paneId: string, cwd?: string): Promise<void> =>
     ipcRenderer.invoke('pty:create', paneId, cwd),
+  createWithCommand: (
+    paneId: string,
+    command: string,
+    args: string[],
+    cwd?: string
+  ): Promise<void> => ipcRenderer.invoke('pty:createWithCommand', paneId, command, args, cwd),
   write: (paneId: string, data: string): void => {
     ipcRenderer.send('pty:write', paneId, data)
   },

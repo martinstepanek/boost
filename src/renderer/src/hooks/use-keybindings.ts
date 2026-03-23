@@ -50,6 +50,13 @@ export function useKeybindings(): void {
         return
       }
 
+      // Command palette
+      if (!shift && code === 'KeyD') {
+        e.preventDefault()
+        store.toggleCommandPalette()
+        return
+      }
+
       // New terminal
       if (!shift && code === 'Enter') {
         e.preventDefault()

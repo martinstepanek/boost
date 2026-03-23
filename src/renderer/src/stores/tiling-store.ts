@@ -1,6 +1,12 @@
 import { create } from 'zustand'
 import { subscribeWithSelector } from 'zustand/middleware'
-import type { Direction, PersistedState, TilingNode, WorkspaceState } from '../../../shared/types'
+import type {
+  Direction,
+  PaneCommand,
+  PersistedState,
+  TilingNode,
+  WorkspaceState
+} from '../../../shared/types'
 import {
   createPane,
   extractPane,
@@ -18,10 +24,14 @@ interface TilingStore {
   workspaces: Record<number, WorkspaceState>
   initialized: boolean
   splitDirection: 'horizontal' | 'vertical'
+  commandPaletteOpen: boolean
 
   initialize(persisted: PersistedState | null): void
   setSplitDirection(direction: 'horizontal' | 'vertical'): void
+  toggleCommandPalette(): void
+  closeCommandPalette(): void
   splitFocusedPane(): void
+  createPaneWithCommand(command: PaneCommand): void
   closeFocusedPane(): void
   moveFocus(direction: Direction): void
   setFocusedPane(paneId: string): void
@@ -75,6 +85,7 @@ export const useTilingStore = create<TilingStore>()(
     workspaces: {},
     initialized: false,
     splitDirection: 'horizontal',
+    commandPaletteOpen: false,
 
     initialize(persisted: PersistedState | null): void {
       if (persisted && persisted.version === 1 && Object.keys(persisted.workspaces).length > 0) {
@@ -94,6 +105,47 @@ export const useTilingStore = create<TilingStore>()(
 
     setSplitDirection(direction): void {
       set({ splitDirection: direction })
+    },
+
+    toggleCommandPalette(): void {
+      set((s) => ({ commandPaletteOpen: !s.commandPaletteOpen }))
+    },
+
+    closeCommandPalette(): void {
+      set({ commandPaletteOpen: false })
+    },
+
+    createPaneWithCommand(command): void {
+      const { activeWorkspace, workspaces, splitDirection } = get()
+      const ws = getWorkspace(workspaces, activeWorkspace)
+      if (!ws) return
+
+      const pane = createPane()
+      pane.command = command
+
+      if (ws.layout === null) {
+        set({
+          workspaces: updateWorkspace(workspaces, activeWorkspace, {
+            ...ws,
+            layout: pane,
+            focusedPaneId: pane.id
+          })
+        })
+        return
+      }
+
+      const result = splitPane(ws.layout, ws.focusedPaneId, splitDirection)
+      if (!result) return
+
+      // Replace the auto-created pane with our command pane
+      const newLayout = replacePaneInTree(result.newRoot, result.newPaneId, pane)
+      set({
+        workspaces: updateWorkspace(workspaces, activeWorkspace, {
+          ...ws,
+          layout: newLayout,
+          focusedPaneId: pane.id
+        })
+      })
     },
 
     splitFocusedPane(): void {

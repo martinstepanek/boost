@@ -1,7 +1,13 @@
+export interface PaneCommand {
+  cmd: string
+  args: string[]
+}
+
 export interface PaneNode {
   type: 'pane'
   id: string
   color: string
+  command?: PaneCommand
 }
 
 export interface SplitNode {

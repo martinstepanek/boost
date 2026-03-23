@@ -2,6 +2,12 @@ import { ElectronAPI } from '@electron-toolkit/preload'
 
 interface PtyAPI {
   create: (paneId: string, cwd?: string) => Promise<void>
+  createWithCommand: (
+    paneId: string,
+    command: string,
+    args: string[],
+    cwd?: string
+  ) => Promise<void>
   write: (paneId: string, data: string) => void
   resize: (paneId: string, cols: number, rows: number) => void
   close: (paneId: string) => Promise<void>

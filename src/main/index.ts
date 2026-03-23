@@ -1,5 +1,6 @@
 import { app, shell, BrowserWindow, dialog, ipcMain } from 'electron'
 import { join } from 'path'
+import { homedir } from 'os'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import { createIPCHandler } from 'electron-trpc/main'
 import { appRouter } from '../shared/router'
@@ -60,7 +61,7 @@ app.whenReady().then(() => {
   setupPtyManager()
 
   ipcMain.handle('dialog:getHomedir', () => {
-    return require('os').homedir()
+    return homedir()
   })
 
   ipcMain.handle('dialog:openFolder', async () => {
