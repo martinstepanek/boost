@@ -1,4 +1,4 @@
-import { useEffect, useRef, useSyncExternalStore } from 'react'
+import { useEffect, useRef } from 'react'
 import { Terminal } from '@xterm/xterm'
 import { FitAddon } from '@xterm/addon-fit'
 import '@xterm/xterm/css/xterm.css'
@@ -21,7 +21,6 @@ import {
   getFitAddon
 } from '../../lib/pty-registry'
 import { useTilingStore } from '../../stores/tiling-store'
-import { subscribeLayoutVersion, getLayoutVersion } from '../../lib/layout-version'
 
 const SESSION_POLL_INTERVAL_MS = 2000
 const SESSION_POLL_MAX_ATTEMPTS = 15
@@ -195,33 +194,6 @@ export default function TerminalPane({
     }, REFIT_DELAY_MS)
     return () => clearTimeout(timer)
   }, [isVisible, paneId])
-
-  // Refit when layout changes (panes repositioned)
-  const layoutVersion = useSyncExternalStore(subscribeLayoutVersion, getLayoutVersion)
-  useEffect(() => {
-    if (!isVisible) return
-    // Double RAF ensures DOM has fully settled before measuring
-    let cancelled = false
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        if (cancelled) return
-        const addon = getFitAddon(paneId)
-        const term = terminalRef.current
-        if (addon && term && isPtyActive(paneId)) {
-          try {
-            addon.fit()
-            term.refresh(0, term.rows - 1)
-            window.pty.resize(paneId, term.cols, term.rows)
-          } catch {
-            // Expected during teardown
-          }
-        }
-      })
-    })
-    return () => {
-      cancelled = true
-    }
-  }, [layoutVersion, isVisible, paneId])
 
   // Focus terminal when pane is focused or becomes visible
   useEffect(() => {
