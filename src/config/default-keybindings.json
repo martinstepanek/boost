@@ -1,0 +1,11 @@
+{
+  "mod": "Super",
+  "splitVertical": "mod+v",
+  "splitHorizontal": "mod+b",
+  "closePane": "mod+Shift+q",
+  "newTerminal": "mod+Return",
+  "focusLeft": "mod+h",
+  "focusDown": "mod+j",
+  "focusUp": "mod+k",
+  "focusRight": "mod+l"
+}
