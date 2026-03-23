@@ -15,7 +15,14 @@ export interface SplitNode {
   children: [TilingNode, TilingNode]
 }
 
-export type TilingNode = PaneNode | SplitNode
+export interface TabNode {
+  type: 'tab'
+  id: string
+  children: PaneNode[]
+  activeIndex: number
+}
+
+export type TilingNode = PaneNode | SplitNode | TabNode
 
 export interface WorkspaceState {
   layout: TilingNode | null

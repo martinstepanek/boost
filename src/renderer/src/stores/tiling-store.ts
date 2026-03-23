@@ -2,14 +2,20 @@ import { create } from 'zustand'
 import { subscribeWithSelector } from 'zustand/middleware'
 import type { Direction, PersistedState, TilingNode, WorkspaceState } from '../../../shared/types'
 import {
+  convertFromTabs,
+  convertToTabs,
   createPane,
   extractPane,
+  extractPaneFromTab,
   findNode,
+  findParent,
   findPaneInDirection,
+  findTabContaining,
   getAllPaneIds,
   movePaneInDirection,
   removePane,
   splitPane,
+  switchTab as switchTabInTree,
   updatePaneInTree,
   updateSplitRatio
 } from '../lib/tiling-tree'
@@ -37,6 +43,10 @@ interface TilingStore {
   moveFocusedPaneToWorkspace(n: number): void
   resizeSplit(splitId: string, newRatio: number): void
   setPaneParam(paneId: string, key: string, value: unknown): void
+  toggleTabLayout(): void
+  toggleSplitLayout(): void
+  switchActiveTab(tabId: string, index: number): void
+  cycleTab(delta: number): void
   getPersistedState(): PersistedState
 }
 
@@ -58,6 +68,13 @@ function replacePaneInTree(
 ): TilingNode {
   if (root.type === 'pane') {
     return root.id === targetId ? replacement : root
+  }
+  if (root.type === 'tab') {
+    // Tab children are panes — only replace if target matches a child ID
+    const newChildren = root.children.map((c) =>
+      c.id === targetId && replacement.type === 'pane' ? replacement : c
+    )
+    return { ...root, children: newChildren }
   }
   return {
     ...root,
@@ -261,6 +278,18 @@ export const useTilingStore = create<TilingStore>()(
       const ws = getWorkspace(workspaces, activeWorkspace)
       if (!ws || ws.layout === null) return
 
+      // If inside a tab, extract pane from tab into a split
+      const tab = findTabContaining(ws.layout, ws.focusedPaneId)
+      if (tab) {
+        const newLayout = extractPaneFromTab(ws.layout, ws.focusedPaneId, direction)
+        if (newLayout !== ws.layout) {
+          set({
+            workspaces: updateWorkspace(workspaces, activeWorkspace, { ...ws, layout: newLayout })
+          })
+        }
+        return
+      }
+
       const newLayout = movePaneInDirection(ws.layout, ws.focusedPaneId, direction)
       if (newLayout === ws.layout) return
 
@@ -274,15 +303,44 @@ export const useTilingStore = create<TilingStore>()(
       const ws = getWorkspace(workspaces, activeWorkspace)
       if (!ws || ws.layout === null) return
 
-      const targetId = findPaneInDirection(ws.layout, ws.focusedPaneId, direction)
-      if (!targetId) return
+      // If inside a tab, try cycling tabs first
+      const tab = findTabContaining(ws.layout, ws.focusedPaneId)
+      if (tab) {
+        const delta = direction === 'right' || direction === 'down' ? 1 : -1
+        const atEdge =
+          (delta === 1 && tab.activeIndex >= tab.children.length - 1) ||
+          (delta === -1 && tab.activeIndex <= 0)
 
-      set({
-        workspaces: updateWorkspace(workspaces, activeWorkspace, {
-          ...ws,
-          focusedPaneId: targetId
+        if (!atEdge) {
+          const newLayout = switchTabInTree(ws.layout, tab.id, delta)
+          const newTab = findNode(newLayout, tab.id)
+          if (newTab?.type === 'tab') {
+            const activeChild = newTab.children[newTab.activeIndex]
+            const newFocused = activeChild
+              ? (getAllPaneIds(activeChild)[0] ?? ws.focusedPaneId)
+              : ws.focusedPaneId
+            set({
+              workspaces: updateWorkspace(workspaces, activeWorkspace, {
+                ...ws,
+                layout: newLayout,
+                focusedPaneId: newFocused
+              })
+            })
+          }
+          return
+        }
+        // At edge of tabs — fall through to geometric navigation
+      }
+
+      const targetId = findPaneInDirection(ws.layout, ws.focusedPaneId, direction)
+      if (targetId) {
+        set({
+          workspaces: updateWorkspace(workspaces, activeWorkspace, {
+            ...ws,
+            focusedPaneId: targetId
+          })
         })
-      })
+      }
     },
 
     setFocusedPane(paneId): void {
@@ -380,6 +438,84 @@ export const useTilingStore = create<TilingStore>()(
         }
       }
       set({ workspaces: newWorkspaces })
+    },
+
+    toggleTabLayout(): void {
+      const { activeWorkspace, workspaces } = get()
+      const ws = getWorkspace(workspaces, activeWorkspace)
+      if (!ws || ws.layout === null) return
+
+      // Find the parent split of the focused pane and convert it to tabs
+      const parentInfo = findParent(ws.layout, ws.focusedPaneId)
+      if (!parentInfo || parentInfo.parent.type !== 'split') return
+
+      const newLayout = convertToTabs(ws.layout, parentInfo.parent.id)
+      set({
+        workspaces: updateWorkspace(workspaces, activeWorkspace, { ...ws, layout: newLayout })
+      })
+    },
+
+    toggleSplitLayout(): void {
+      const { activeWorkspace, workspaces } = get()
+      const ws = getWorkspace(workspaces, activeWorkspace)
+      if (!ws || ws.layout === null) return
+
+      const tab = findTabContaining(ws.layout, ws.focusedPaneId)
+      if (!tab) return
+
+      const newLayout = convertFromTabs(ws.layout, tab.id)
+      set({
+        workspaces: updateWorkspace(workspaces, activeWorkspace, { ...ws, layout: newLayout })
+      })
+    },
+
+    switchActiveTab(tabId, index): void {
+      const { activeWorkspace, workspaces } = get()
+      const ws = getWorkspace(workspaces, activeWorkspace)
+      if (!ws || ws.layout === null) return
+
+      const tabNode = findNode(ws.layout, tabId)
+      if (!tabNode || tabNode.type !== 'tab') return
+
+      const newLayout = switchTabInTree(ws.layout, tabId, index - tabNode.activeIndex)
+      const activeChild = tabNode.children[index]
+      const newFocused = activeChild
+        ? (getAllPaneIds(activeChild)[0] ?? ws.focusedPaneId)
+        : ws.focusedPaneId
+
+      set({
+        workspaces: updateWorkspace(workspaces, activeWorkspace, {
+          ...ws,
+          layout: newLayout,
+          focusedPaneId: newFocused
+        })
+      })
+    },
+
+    cycleTab(delta): void {
+      const { activeWorkspace, workspaces } = get()
+      const ws = getWorkspace(workspaces, activeWorkspace)
+      if (!ws || ws.layout === null) return
+
+      const tab = findTabContaining(ws.layout, ws.focusedPaneId)
+      if (!tab) return
+
+      const newLayout = switchTabInTree(ws.layout, tab.id, delta)
+      // Get the new active child's first pane for focus
+      const newTab = findNode(newLayout, tab.id)
+      if (newTab?.type === 'tab') {
+        const activeChild = newTab.children[newTab.activeIndex]
+        const newFocused = activeChild
+          ? (getAllPaneIds(activeChild)[0] ?? ws.focusedPaneId)
+          : ws.focusedPaneId
+        set({
+          workspaces: updateWorkspace(workspaces, activeWorkspace, {
+            ...ws,
+            layout: newLayout,
+            focusedPaneId: newFocused
+          })
+        })
+      }
     },
 
     getPersistedState(): PersistedState {

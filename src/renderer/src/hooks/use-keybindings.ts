@@ -64,6 +64,32 @@ export function useKeybindings(): void {
         return
       }
 
+      // Tabbed layout
+      if (!shift && code === 'KeyW') {
+        e.preventDefault()
+        store.toggleTabLayout()
+        return
+      }
+
+      // Split layout (from tabs)
+      if (!shift && code === 'KeyE') {
+        e.preventDefault()
+        store.toggleSplitLayout()
+        return
+      }
+
+      // Cycle tabs
+      if (!shift && code === 'BracketLeft') {
+        e.preventDefault()
+        store.cycleTab(-1)
+        return
+      }
+      if (!shift && code === 'BracketRight') {
+        e.preventDefault()
+        store.cycleTab(1)
+        return
+      }
+
       // Close pane
       if (shift && code === 'KeyQ') {
         e.preventDefault()

@@ -61,6 +61,10 @@ Alt+H/J/K/L (focus), Alt+Shift+H/J/K/L (move), Alt+1-9 (workspace), Alt+Shift+Q 
 
 Requires Node.js 22+ (pinned via `.nvmrc`). Use `nvm use` before running commands.
 
+## Behavioral Spec
+
+When making a specific behavioral decision (how a feature should work, edge case handling, interaction behavior), **always update `docs/behavioral-spec.md`** with the decision. This document serves as the source of truth for expected behavior and future tests.
+
 ## Git
 
 - Do NOT push tags unless explicitly asked. Tags trigger CI builds.

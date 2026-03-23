@@ -34,12 +34,14 @@ This document captures all specific behavioral decisions made during development
 
 ### Tab layout
 
-- `Alt+W` converts the parent split of the focused pane into a **tabbed container**
+- Tabs **only contain panes** (leaf nodes) — no nesting of splits or tabs inside tabs
+- `Alt+W` converts the parent split into a **tabbed container**, flattening all leaf panes
 - `Alt+E` converts a tab group back to a **split layout** (balanced binary tree)
-- `Alt+Enter` inside a tab group adds a **new tab** (not a nested split)
+- `Alt+Enter` inside a tab group adds a **new tab** (new pane, not a nested split)
 - `Alt+Shift+Q` inside a tab closes the **active tab**; if one tab remains, the tab container unwraps
+- `Alt+Shift+Direction` inside a tab **extracts** the pane from the tab and creates a split
 - Only the **active tab's content** is rendered; other tabs' terminals keep running (no unmount)
-- Tab bar shows at the top with labels; active tab highlighted; focused tab has accent border
+- Tab bar shows at the top with app name labels; active tab highlighted; focused tab has accent border
 
 ### Closing panes
 
