@@ -3,6 +3,9 @@ import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import { createIPCHandler } from 'electron-trpc/main'
 import { appRouter } from '../shared/router'
+
+app.commandLine.appendSwitch('disable-gpu')
+app.commandLine.appendSwitch('no-sandbox')
 import icon from '../../resources/icon.png?asset'
 
 function createWindow(): void {
@@ -20,6 +23,11 @@ function createWindow(): void {
 
   mainWindow.on('ready-to-show', () => {
     mainWindow.show()
+  })
+
+  // Log renderer console to terminal for debugging
+  mainWindow.webContents.on('console-message', (_e, _level, message) => {
+    console.log('[renderer]', message)
   })
 
   mainWindow.webContents.setWindowOpenHandler((details) => {

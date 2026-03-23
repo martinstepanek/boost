@@ -1,7 +1,10 @@
 node_modules/
 dist/
 out/
+build/
 .idea/
+.vscode/
+.eslintcache
 *.env
 *.local
 .yarn/*
