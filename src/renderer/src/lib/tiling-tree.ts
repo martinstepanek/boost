@@ -241,7 +241,11 @@ export function findPaneInDirection(
   return bestId
 }
 
-export function movePaneInDirection(root: TilingNode, paneId: string, direction: Direction): TilingNode {
+export function movePaneInDirection(
+  root: TilingNode,
+  paneId: string,
+  direction: Direction
+): TilingNode {
   const parentInfo = findParent(root, paneId)
   if (!parentInfo) return root // pane is root, can't move
 

@@ -7,7 +7,10 @@ interface TilingContainerProps {
   isVisible: boolean
 }
 
-export default function TilingContainer({ node, isVisible }: TilingContainerProps): React.JSX.Element {
+export default function TilingContainer({
+  node,
+  isVisible
+}: TilingContainerProps): React.JSX.Element {
   if (node.type === 'pane') {
     return <Pane pane={node} isVisible={isVisible} />
   }

@@ -49,9 +49,7 @@ export default function TerminalOverlay(): React.JSX.Element {
     () => paneRectStore.getSnapshot()
   )
 
-  const focusedPaneId = useTilingStore(
-    (s) => s.workspaces[s.activeWorkspace]?.focusedPaneId
-  )
+  const focusedPaneId = useTilingStore((s) => s.workspaces[s.activeWorkspace]?.focusedPaneId)
 
   // Collect all pane IDs across all workspaces
   const allPaneIds = useTilingStore(
@@ -91,11 +89,7 @@ export default function TerminalOverlay(): React.JSX.Element {
               display: isVisible ? 'flex' : 'none'
             }}
           >
-            <TerminalPane
-              paneId={id}
-              isFocused={id === focusedPaneId}
-              isVisible={isVisible}
-            />
+            <TerminalPane paneId={id} isFocused={id === focusedPaneId} isVisible={isVisible} />
           </div>
         )
       })}
