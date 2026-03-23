@@ -4,22 +4,23 @@ The app persists its state so that closing and reopening the app restores the ex
 
 ## What Is Persisted
 
-| Data | Persisted? | Notes |
-|---|---|---|
-| Which workspaces exist | Yes | e.g., workspaces 1, 3, 5 are active |
-| Active workspace | Yes | Which workspace was visible on close |
-| Tiling layout per workspace | Yes | Full binary tree structure with split ratios |
-| Pane positions and sizes | Yes | Derived from the tree + split ratios |
-| Terminal working directory | Yes | `cwd` of each terminal at save time |
-| Terminal scrollback/history | No | Too large; terminals start fresh |
-| Running processes | No | Processes are re-launched from saved `cwd` |
-| Backend target per pane | Yes | Target ID (e.g., `wsl:Ubuntu`, `local`) |
+| Data                        | Persisted? | Notes                                        |
+| --------------------------- | ---------- | -------------------------------------------- |
+| Which workspaces exist      | Yes        | e.g., workspaces 1, 3, 5 are active          |
+| Active workspace            | Yes        | Which workspace was visible on close         |
+| Tiling layout per workspace | Yes        | Full binary tree structure with split ratios |
+| Pane positions and sizes    | Yes        | Derived from the tree + split ratios         |
+| Terminal working directory  | Yes        | `cwd` of each terminal at save time          |
+| Terminal scrollback/history | No         | Too large; terminals start fresh             |
+| Running processes           | No         | Processes are re-launched from saved `cwd`   |
+| Backend target per pane     | Yes        | Target ID (e.g., `wsl:Ubuntu`, `local`)      |
 
 ## How It Works
 
 ### Save Triggers
 
 State is saved automatically on:
+
 - **App close** - `before-quit` event in Electron main process
 - **Layout change** - After any split, close, resize, or workspace switch (debounced, ~1s delay)
 - **Periodic autosave** - Every 60 seconds as a safety net

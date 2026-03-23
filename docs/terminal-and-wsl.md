@@ -32,53 +32,53 @@ This pattern is validated by VS Code Remote, code-server, and devcontainers, all
 ```typescript
 interface BackendTarget {
   /** Unique identifier, e.g. "local", "wsl:Ubuntu", "ssh:myserver" */
-  id: string;
+  id: string
 
   /** Human-readable label for UI */
-  label: string;
+  label: string
 
   /** Spawn a shell process, returns a PTY handle */
-  spawn(options: SpawnOptions): PtyHandle;
+  spawn(options: SpawnOptions): PtyHandle
 
   /** Resolve a path in target-native format */
-  resolvePath(path: string): string;
+  resolvePath(path: string): string
 
   /** Get the default working directory */
-  defaultCwd(): string;
+  defaultCwd(): string
 
   /** Get environment variables for the target */
-  getEnv(): Record<string, string>;
+  getEnv(): Record<string, string>
 
   /** Check if the target is available and healthy */
-  probe(): Promise<TargetStatus>;
+  probe(): Promise<TargetStatus>
 
   /** Capabilities this target supports */
-  capabilities: TargetCapabilities;
+  capabilities: TargetCapabilities
 }
 
 interface SpawnOptions {
-  cwd: string;          // In target-native path format (always Linux paths for WSL)
-  cols: number;
-  rows: number;
-  shell?: string;       // Override default shell
+  cwd: string // In target-native path format (always Linux paths for WSL)
+  cols: number
+  rows: number
+  shell?: string // Override default shell
 }
 
 interface TargetCapabilities {
-  hasGit: boolean;
-  defaultShell: string;
-  pathSeparator: '/' | '\\';
-  supportsSignals: boolean;
+  hasGit: boolean
+  defaultShell: string
+  pathSeparator: '/' | '\\'
+  supportsSignals: boolean
 }
 ```
 
 ### Available Targets
 
-| Target ID | Description | Status |
-|---|---|---|
-| `local` | System's native shell (`$SHELL` or `cmd.exe`) | Implemented |
-| `wsl:auto` | Auto-detect default WSL distribution | Implemented |
+| Target ID      | Description                                    | Status      |
+| -------------- | ---------------------------------------------- | ----------- |
+| `local`        | System's native shell (`$SHELL` or `cmd.exe`)  | Implemented |
+| `wsl:auto`     | Auto-detect default WSL distribution           | Implemented |
 | `wsl:<distro>` | Specific WSL distribution (e.g., `wsl:Ubuntu`) | Implemented |
-| `ssh:<host>` | Remote shell over SSH | Future |
+| `ssh:<host>`   | Remote shell over SSH                          | Future      |
 
 ### Target Resolution
 
@@ -123,18 +123,18 @@ class WslTarget implements BackendTarget {
       cols: options.cols,
       rows: options.rows,
       cwd: options.cwd,
-      env: process.env,
-    });
+      env: process.env
+    })
   }
 
   resolvePath(path: string): string {
     // All paths stored and used as Linux paths — no translation needed
     // Only translate at Windows↔WSL boundary when absolutely necessary
-    return path;
+    return path
   }
 
   defaultCwd(): string {
-    return `/home/${this.getWslUser()}`;
+    return `/home/${this.getWslUser()}`
   }
 }
 ```
@@ -150,12 +150,12 @@ class TargetResolver {
   }
 
   async resolveWslTarget(distro?: string): Promise<WslTarget> {
-    const distros = await this.detectWslDistros();
-    if (distros.length === 0) throw new TargetUnavailableError('No WSL distributions found');
-    const selected = distro ?? distros[0]; // Use specified or default
-    const target = new WslTarget(selected);
-    await target.probe(); // Verify it's healthy
-    return target;
+    const distros = await this.detectWslDistros()
+    if (distros.length === 0) throw new TargetUnavailableError('No WSL distributions found')
+    const selected = distro ?? distros[0] // Use specified or default
+    const target = new WslTarget(selected)
+    await target.probe() // Verify it's healthy
+    return target
   }
 }
 ```
@@ -164,12 +164,12 @@ class TargetResolver {
 
 A key design decision: **all paths in the app are Linux paths**. No translation layer, no Windows↔Linux conversion scattered through the codebase.
 
-| Where | Path Format | Example |
-|---|---|---|
-| Persistence (state.json) | Linux | `/home/stepanek/project` |
-| PTY spawn cwd | Linux | `/home/stepanek/project` |
-| UI display | Linux | `/home/stepanek/project` |
-| BackendTarget interface | Linux | Always target-native |
+| Where                    | Path Format | Example                  |
+| ------------------------ | ----------- | ------------------------ |
+| Persistence (state.json) | Linux       | `/home/stepanek/project` |
+| PTY spawn cwd            | Linux       | `/home/stepanek/project` |
+| UI display               | Linux       | `/home/stepanek/project` |
+| BackendTarget interface  | Linux       | Always target-native     |
 
 Path translation only happens at the **boundary** — if the app ever needs to open a Windows file picker or interact with the Windows filesystem directly. This is handled inside the target implementation, never by the caller.
 
@@ -182,18 +182,18 @@ Fallback for running on Linux/macOS natively (no WSL).
 ```typescript
 class LocalTarget implements BackendTarget {
   spawn(options: SpawnOptions): PtyHandle {
-    const shell = process.env.SHELL || '/bin/bash';
+    const shell = process.env.SHELL || '/bin/bash'
     return pty.spawn(shell, [], {
       name: 'xterm-256color',
       cols: options.cols,
       rows: options.rows,
       cwd: options.cwd,
-      env: process.env,
-    });
+      env: process.env
+    })
   }
 
   defaultCwd(): string {
-    return process.env.HOME || '/';
+    return process.env.HOME || '/'
   }
 }
 ```
@@ -214,12 +214,12 @@ Without the abstraction, WSL support becomes scattered conditionals:
 ```typescript
 // BAD: WSL as a special case
 if (isWsl) {
-  shell = 'wsl.exe';
-  args = ['-d', distro, '--', 'bash'];
-  cwd = translatePath(cwd);  // fragile
+  shell = 'wsl.exe'
+  args = ['-d', distro, '--', 'bash']
+  cwd = translatePath(cwd) // fragile
 } else {
-  shell = process.env.SHELL;
-  args = [];
+  shell = process.env.SHELL
+  args = []
 }
 ```
 
@@ -227,7 +227,7 @@ With the abstraction, the PTY manager is clean:
 
 ```typescript
 // GOOD: Target handles the details
-const pty = target.spawn({ cwd, cols, rows });
+const pty = target.spawn({ cwd, cols, rows })
 ```
 
 This scales to SSH, containers, or any future target without touching the PTY manager or renderer.

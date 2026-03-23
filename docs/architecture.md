@@ -61,6 +61,7 @@
 ## Process Model
 
 ### Main Process (Electron main)
+
 - Window creation and lifecycle
 - PTY process management (target-agnostic — delegates to BackendTarget)
 - Backend target resolution (local, WSL, future SSH)
@@ -69,6 +70,7 @@
 - System tray / native OS integration
 
 ### Renderer Process (React)
+
 - UI rendering with React
 - Tiling layout engine (manages the binary split tree)
 - Workspace management

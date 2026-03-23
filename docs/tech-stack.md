@@ -2,16 +2,16 @@
 
 ## Technology Choices
 
-| Layer | Technology | Why |
-|---|---|---|
-| App framework | **Electron** | Desktop app with native OS access (PTY, global shortcuts) |
-| Frontend framework | **React + TypeScript** | Component-based UI, strong ecosystem |
-| Project scaffolding | **create-t3-app** | Opinionated full-stack setup with TypeScript, provides solid boilerplate |
-| Terminal rendering | **xterm.js** | Industry standard (used by VS Code, Hyper, Tabby) |
-| Shell process mgmt | **node-pty** | PTY bindings for Node.js, required for real terminal emulation |
-| State management | **Zustand** | Lightweight, no boilerplate, works well with React |
-| Styling | **Tailwind CSS** (via T3) | Utility-first, fast iteration |
-| Persistence | **JSON file** (electron userData) | Simple, no database needed for layout state |
+| Layer               | Technology                        | Why                                                                      |
+| ------------------- | --------------------------------- | ------------------------------------------------------------------------ |
+| App framework       | **Electron**                      | Desktop app with native OS access (PTY, global shortcuts)                |
+| Frontend framework  | **React + TypeScript**            | Component-based UI, strong ecosystem                                     |
+| Project scaffolding | **create-t3-app**                 | Opinionated full-stack setup with TypeScript, provides solid boilerplate |
+| Terminal rendering  | **xterm.js**                      | Industry standard (used by VS Code, Hyper, Tabby)                        |
+| Shell process mgmt  | **node-pty**                      | PTY bindings for Node.js, required for real terminal emulation           |
+| State management    | **Zustand**                       | Lightweight, no boilerplate, works well with React                       |
+| Styling             | **Tailwind CSS** (via T3)         | Utility-first, fast iteration                                            |
+| Persistence         | **JSON file** (electron userData) | Simple, no database needed for layout state                              |
 
 ## Project Setup with T3
 

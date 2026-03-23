@@ -1,4 +1,4 @@
- # Workspaces & Tiling
+# Workspaces & Tiling
 
 ## Workspaces
 
@@ -14,12 +14,13 @@ Workspaces are numbered virtual desktops, inspired by i3wm. Only one workspace i
 
 ### Workspace Switching
 
-| Action | Keybinding |
-|---|---|
-| Switch to workspace N | `Win+N` (1-9) |
+| Action                           | Keybinding          |
+| -------------------------------- | ------------------- |
+| Switch to workspace N            | `Win+N` (1-9)       |
 | Move focused pane to workspace N | `Win+Shift+N` (1-9) |
 
 When switching workspaces:
+
 1. Current workspace's layout is preserved in memory
 2. Target workspace's layout is rendered
 3. Focus is restored to whichever pane was last focused in the target workspace
@@ -40,12 +41,14 @@ The layout engine uses a **binary split tree**, the same model i3wm uses.
 ```
 
 Every node is either:
+
 - **Split Container** - has a direction (horizontal/vertical), a split ratio, and exactly two children
 - **Leaf (Pane)** - contains a terminal (or in the future, a browser tab)
 
 ### Operations
 
 #### Split
+
 Divides the currently focused pane into two. The focused pane becomes a split container with the original content in one child and a new terminal in the other.
 
 ```
@@ -57,54 +60,57 @@ Before:                After Win+V (vertical split):
 └──────────┘          └──────────┘
 ```
 
-| Action | Keybinding |
-|---|---|
-| Split vertical | `Win+V` |
-| Split horizontal | `Win+B` |
+| Action           | Keybinding |
+| ---------------- | ---------- |
+| Split vertical   | `Win+V`    |
+| Split horizontal | `Win+B`    |
 
 #### Focus Navigation
+
 Move focus between panes using directional keys.
 
-| Action | Keybinding |
-|---|---|
-| Focus left | `Win+H` |
-| Focus down | `Win+J` |
-| Focus up | `Win+K` |
-| Focus right | `Win+L` |
+| Action      | Keybinding |
+| ----------- | ---------- |
+| Focus left  | `Win+H`    |
+| Focus down  | `Win+J`    |
+| Focus up    | `Win+K`    |
+| Focus right | `Win+L`    |
 
 Focus navigation walks the tree to find the geometrically nearest pane in the given direction.
 
 #### Move Pane
+
 Swap the focused pane's position in the layout.
 
-| Action | Keybinding |
-|---|---|
-| Move left | `Win+Shift+H` |
-| Move down | `Win+Shift+J` |
-| Move up | `Win+Shift+K` |
+| Action     | Keybinding    |
+| ---------- | ------------- |
+| Move left  | `Win+Shift+H` |
+| Move down  | `Win+Shift+J` |
+| Move up    | `Win+Shift+K` |
 | Move right | `Win+Shift+L` |
 
 #### Resize
 
-| Action | Keybinding |
-|---|---|
-| Enter resize mode | `Win+R` |
-| Resize (in resize mode) | `H/J/K/L` |
-| Exit resize mode | `Escape` or `Enter` |
+| Action                  | Keybinding          |
+| ----------------------- | ------------------- |
+| Enter resize mode       | `Win+R`             |
+| Resize (in resize mode) | `H/J/K/L`           |
+| Exit resize mode        | `Escape` or `Enter` |
 
 Resize can also be done by dragging split handles with the mouse.
 
 #### Other Actions
 
-| Action | Keybinding |
-|---|---|
-| New terminal | `Win+Enter` |
+| Action             | Keybinding    |
+| ------------------ | ------------- |
+| New terminal       | `Win+Enter`   |
 | Close focused pane | `Win+Shift+Q` |
-| Toggle fullscreen | `Win+F` |
+| Toggle fullscreen  | `Win+F`       |
 
 ### Layout Examples
 
 **Single pane (default new workspace):**
+
 ```
 ┌────────────────────────┐
 │                        │
@@ -114,6 +120,7 @@ Resize can also be done by dragging split handles with the mouse.
 ```
 
 **Two horizontal splits + one vertical:**
+
 ```
 ┌───────────┬────────────┐
 │           │            │
@@ -127,6 +134,7 @@ Resize can also be done by dragging split handles with the mouse.
 ```
 
 **Complex workspace:**
+
 ```
 ┌──────┬──────┬──────────┐
 │      │      │          │

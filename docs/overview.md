@@ -16,12 +16,14 @@ TileTerm is a desktop terminal application with i3-like tiling window management
 ## Scope
 
 ### Phase 1 (Current)
+
 - Terminal panes only (no browser tabs)
 - Workspaces with tiling layout
 - WSL shell support
 - State persistence
 
 ### Future
+
 - Embedded web browser tabs as panes (Electron webview)
 - Tabbed browsing within panes
 - Multi-monitor workspace assignment

@@ -6,58 +6,58 @@ All keybindings use `Win` (Super) as the modifier key, matching i3wm conventions
 
 ### Workspace Management
 
-| Keybinding | Action |
-|---|---|
-| `Win+1` through `Win+9` | Switch to workspace 1-9 |
+| Keybinding                          | Action                             |
+| ----------------------------------- | ---------------------------------- |
+| `Win+1` through `Win+9`             | Switch to workspace 1-9            |
 | `Win+Shift+1` through `Win+Shift+9` | Move focused pane to workspace 1-9 |
 
 ### Pane Creation & Destruction
 
-| Keybinding | Action |
-|---|---|
-| `Win+Enter` | Open new terminal in current workspace |
-| `Win+V` | Split focused pane vertically (top/bottom) |
-| `Win+B` | Split focused pane horizontally (left/right) |
-| `Win+Shift+Q` | Close focused pane |
+| Keybinding    | Action                                       |
+| ------------- | -------------------------------------------- |
+| `Win+Enter`   | Open new terminal in current workspace       |
+| `Win+V`       | Split focused pane vertically (top/bottom)   |
+| `Win+B`       | Split focused pane horizontally (left/right) |
+| `Win+Shift+Q` | Close focused pane                           |
 
 ### Focus Navigation
 
-| Keybinding | Action |
-|---|---|
-| `Win+H` | Focus pane to the left |
-| `Win+J` | Focus pane below |
-| `Win+K` | Focus pane above |
-| `Win+L` | Focus pane to the right |
+| Keybinding | Action                  |
+| ---------- | ----------------------- |
+| `Win+H`    | Focus pane to the left  |
+| `Win+J`    | Focus pane below        |
+| `Win+K`    | Focus pane above        |
+| `Win+L`    | Focus pane to the right |
 
 ### Pane Movement
 
-| Keybinding | Action |
-|---|---|
-| `Win+Shift+H` | Move pane left |
-| `Win+Shift+J` | Move pane down |
-| `Win+Shift+K` | Move pane up |
+| Keybinding    | Action          |
+| ------------- | --------------- |
+| `Win+Shift+H` | Move pane left  |
+| `Win+Shift+J` | Move pane down  |
+| `Win+Shift+K` | Move pane up    |
 | `Win+Shift+L` | Move pane right |
 
 ### Resize
 
-| Keybinding | Action |
-|---|---|
-| `Win+R` | Enter resize mode |
+| Keybinding                 | Action                   |
+| -------------------------- | ------------------------ |
+| `Win+R`                    | Enter resize mode        |
 | `H/J/K/L` (in resize mode) | Shrink/grow in direction |
-| `Escape` or `Enter` | Exit resize mode |
+| `Escape` or `Enter`        | Exit resize mode         |
 
 ### Layout
 
-| Keybinding | Action |
-|---|---|
-| `Win+F` | Toggle fullscreen for focused pane |
+| Keybinding | Action                             |
+| ---------- | ---------------------------------- |
+| `Win+F`    | Toggle fullscreen for focused pane |
 
 ### Terminal
 
-| Keybinding | Action |
-|---|---|
+| Keybinding     | Action         |
+| -------------- | -------------- |
 | `Ctrl+Shift+C` | Copy selection |
-| `Ctrl+Shift+V` | Paste |
+| `Ctrl+Shift+V` | Paste          |
 
 ## Key Handling Architecture
 
