@@ -48,6 +48,10 @@ Use `e.code` (not `e.key`) for keyboard handling — it's layout-independent.
 
 Requires Node.js 22+ (pinned via `.nvmrc`). Use `nvm use` before running commands.
 
+## Git
+- Do NOT push tags unless explicitly asked. Tags trigger CI builds.
+- Push to main is fine for regular commits.
+
 ## Commands
 
 ```bash
