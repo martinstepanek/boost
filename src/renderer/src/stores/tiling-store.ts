@@ -17,9 +17,11 @@ interface TilingStore {
   activeWorkspace: number
   workspaces: Record<number, WorkspaceState>
   initialized: boolean
+  splitDirection: 'horizontal' | 'vertical'
 
   initialize(persisted: PersistedState | null): void
-  splitFocusedPane(direction: 'horizontal' | 'vertical'): void
+  setSplitDirection(direction: 'horizontal' | 'vertical'): void
+  splitFocusedPane(): void
   closeFocusedPane(): void
   moveFocus(direction: Direction): void
   setFocusedPane(paneId: string): void
@@ -74,6 +76,7 @@ export const useTilingStore = create<TilingStore>()(
     activeWorkspace: 1,
     workspaces: {},
     initialized: false,
+    splitDirection: 'horizontal',
 
     initialize(persisted: PersistedState | null): void {
       if (persisted && persisted.version === 1 && Object.keys(persisted.workspaces).length > 0) {
@@ -91,12 +94,16 @@ export const useTilingStore = create<TilingStore>()(
       }
     },
 
-    splitFocusedPane(direction): void {
-      const { activeWorkspace, workspaces } = get()
+    setSplitDirection(direction): void {
+      set({ splitDirection: direction })
+    },
+
+    splitFocusedPane(): void {
+      const { activeWorkspace, workspaces, splitDirection } = get()
       const ws = getWorkspace(workspaces, activeWorkspace)
       if (!ws) return
 
-      const result = splitPane(ws.layout, ws.focusedPaneId, direction)
+      const result = splitPane(ws.layout, ws.focusedPaneId, splitDirection)
       if (!result) return
 
       set({

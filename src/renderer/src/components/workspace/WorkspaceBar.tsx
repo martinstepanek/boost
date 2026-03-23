@@ -11,6 +11,7 @@ export default function WorkspaceBar(): React.JSX.Element {
     )
   )
   const switchWorkspace = useTilingStore((s) => s.switchWorkspace)
+  const splitDirection = useTilingStore((s) => s.splitDirection)
 
   return (
     <div
@@ -55,6 +56,16 @@ export default function WorkspaceBar(): React.JSX.Element {
           {n}
         </button>
       ))}
+      <span
+        style={{
+          marginLeft: 'auto',
+          fontSize: '11px',
+          fontFamily: 'var(--font-ui)',
+          color: 'var(--text-secondary)'
+        }}
+      >
+        {splitDirection === 'horizontal' ? '⬌' : '⬍'}
+      </span>
     </div>
   )
 }

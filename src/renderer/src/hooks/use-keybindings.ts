@@ -2,29 +2,33 @@ import { useEffect } from 'react'
 import { useTilingStore } from '../stores/tiling-store'
 import type { Direction } from '../../../shared/types'
 
-const DIRECTION_MAP: Record<string, Direction> = {
-  h: 'left',
-  j: 'down',
-  k: 'up',
-  l: 'right',
-  arrowleft: 'left',
-  arrowdown: 'down',
-  arrowup: 'up',
-  arrowright: 'right'
+const DIRECTION_CODE_MAP: Record<string, Direction> = {
+  KeyH: 'left',
+  KeyJ: 'down',
+  KeyK: 'up',
+  KeyL: 'right',
+  ArrowLeft: 'left',
+  ArrowDown: 'down',
+  ArrowUp: 'up',
+  ArrowRight: 'right'
 }
 
 export function useKeybindings(): void {
   useEffect(() => {
     const handler = (e: KeyboardEvent): void => {
+      // Prevent Alt from activating the Electron menu bar
+      if (e.altKey) {
+        e.preventDefault()
+      }
       if (!e.altKey) return
 
       const store = useTilingStore.getState()
-      const key = e.key.toLowerCase()
       const code = e.code
       const shift = e.shiftKey
 
-      // Workspace switching: Super+Shift+1-9 (move pane) or Super+1-9 (switch)
-      // Use e.code since shift changes e.key on some layouts
+
+
+      // Workspace: Alt+1-9 / Alt+Shift+1-9
       if (code >= 'Digit1' && code <= 'Digit9') {
         const n = parseInt(code.slice(5))
         e.preventDefault()
@@ -36,27 +40,34 @@ export function useKeybindings(): void {
         return
       }
 
-      // Split
-      if (!shift && key === 'b') {
+      // Split direction
+      if (!shift && code === 'KeyB') {
         e.preventDefault()
-        store.splitFocusedPane('horizontal')
+        store.setSplitDirection('horizontal')
         return
       }
-      if (!shift && key === 'v') {
+      if (!shift && code === 'KeyV') {
         e.preventDefault()
-        store.splitFocusedPane('vertical')
+        store.setSplitDirection('vertical')
+        return
+      }
+
+      // New terminal
+      if (!shift && code === 'Enter') {
+        e.preventDefault()
+        store.splitFocusedPane()
         return
       }
 
       // Close pane
-      if (shift && key === 'q') {
+      if (shift && code === 'KeyQ') {
         e.preventDefault()
         store.closeFocusedPane()
         return
       }
 
       // Focus navigation / swap panes
-      const direction = DIRECTION_MAP[key]
+      const direction = DIRECTION_CODE_MAP[code]
       if (direction) {
         e.preventDefault()
         if (shift) {
