@@ -5,9 +5,10 @@ import TilingContainer from './TilingContainer'
 
 interface SplitContainerProps {
   split: SplitNode
+  isVisible: boolean
 }
 
-export default function SplitContainer({ split }: SplitContainerProps): React.JSX.Element {
+export default function SplitContainer({ split, isVisible }: SplitContainerProps): React.JSX.Element {
   const containerRef = useRef<HTMLDivElement>(null)
   const resizeSplit = useTilingStore((s) => s.resizeSplit)
 
@@ -59,7 +60,7 @@ export default function SplitContainer({ split }: SplitContainerProps): React.JS
         className="flex"
         style={{ [isHorizontal ? 'width' : 'height']: firstSize, flexShrink: 0 }}
       >
-        <TilingContainer node={split.children[0]} />
+        <TilingContainer node={split.children[0]} isVisible={isVisible} />
       </div>
       <div
         className="flex-shrink-0 bg-gray-700 hover:bg-blue-500 transition-colors"
@@ -74,7 +75,7 @@ export default function SplitContainer({ split }: SplitContainerProps): React.JS
         className="flex"
         style={{ [isHorizontal ? 'width' : 'height']: secondSize, flexShrink: 0 }}
       >
-        <TilingContainer node={split.children[1]} />
+        <TilingContainer node={split.children[1]} isVisible={isVisible} />
       </div>
     </div>
   )

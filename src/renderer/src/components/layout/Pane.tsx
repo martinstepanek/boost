@@ -1,34 +1,56 @@
+import { useEffect, useRef } from 'react'
 import type { PaneNode } from '../../../../shared/types'
 import { useTilingStore } from '../../stores/tiling-store'
-import { getAllPaneIds } from '../../lib/tiling-tree'
+import { paneRectStore } from './TerminalOverlay'
 
 interface PaneProps {
   pane: PaneNode
+  isVisible: boolean
 }
 
-export default function Pane({ pane }: PaneProps): React.JSX.Element {
+export default function Pane({ pane, isVisible }: PaneProps): React.JSX.Element {
+  const ref = useRef<HTMLDivElement>(null)
   const isFocused = useTilingStore(
     (s) => s.workspaces[s.activeWorkspace]?.focusedPaneId === pane.id
   )
-  const label = useTilingStore((s) => {
-    const ws = s.workspaces[s.activeWorkspace]
-    if (!ws) return ''
-    const paneIds = getAllPaneIds(ws.layout)
-    const index = paneIds.indexOf(pane.id) + 1
-    return `${s.activeWorkspace}-${index}`
-  })
   const setFocusedPane = useTilingStore((s) => s.setFocusedPane)
+
+  // Report this pane's bounding rect to the overlay
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+
+    const update = (): void => {
+      const rect = el.getBoundingClientRect()
+      paneRectStore.set(pane.id, { x: rect.left, y: rect.top, w: rect.width, h: rect.height })
+      paneRectStore.notify()
+    }
+
+    update()
+
+    const observer = new ResizeObserver(update)
+    observer.observe(el)
+
+    // Also update on visibility change
+    if (isVisible) {
+      requestAnimationFrame(update)
+    }
+
+    return () => {
+      observer.disconnect()
+      paneRectStore.delete(pane.id)
+      paneRectStore.notify()
+    }
+  }, [pane.id, isVisible])
 
   return (
     <div
-      className="flex-1 flex items-center justify-center select-none cursor-pointer transition-[border-color] duration-150"
+      ref={ref}
+      className="flex-1 flex"
       style={{
-        backgroundColor: pane.color,
         border: isFocused ? '2px solid #3b82f6' : '2px solid transparent'
       }}
-      onClick={() => setFocusedPane(pane.id)}
-    >
-      <span className="text-white/60 text-2xl font-mono font-bold">{label}</span>
-    </div>
+      onMouseDown={() => setFocusedPane(pane.id)}
+    />
   )
 }
