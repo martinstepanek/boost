@@ -38,7 +38,9 @@ export default function WorkspaceSetup({
 
   useEffect(() => {
     if (selectedTarget) {
-      window.dialog.getHomedir(selectedTarget).then(setHomedir)
+      window.dialog.getHomedir(selectedTarget).then((h) => {
+        setHomedir(h.replace(/[\\/]+$/, ''))
+      })
     }
   }, [selectedTarget])
 
@@ -58,6 +60,9 @@ export default function WorkspaceSetup({
     }
   }, [isActive, hasLayout])
 
+  const sep = homedir.includes('\\') ? '\\' : '/'
+  const isAbsolute = (p: string): boolean => p.startsWith('/') || /^[a-zA-Z]:\\/.test(p)
+
   const handleTargetChange = (targetId: string): void => {
     setSelectedTarget(targetId)
     setWorkspaceTarget(targetId)
@@ -70,10 +75,10 @@ export default function WorkspaceSetup({
     e.preventDefault()
 
     const value = inputValue || ''
-    const fullPath = value.startsWith('/') ? value : `${homedir}/${value}`
-    const lastSlash = fullPath.lastIndexOf('/')
-    const parentDir = fullPath.slice(0, lastSlash) || '/'
-    const partial = fullPath.slice(lastSlash + 1)
+    const fullPath = isAbsolute(value) ? value : `${homedir}${sep}${value}`
+    const lastSep = Math.max(fullPath.lastIndexOf('/'), fullPath.lastIndexOf('\\'))
+    const parentDir = fullPath.slice(0, lastSep) || sep
+    const partial = fullPath.slice(lastSep + 1)
 
     const entries = await window.dialog.listDir(parentDir, selectedTarget)
     const matches = entries.filter((name) => name.startsWith(partial))
@@ -87,36 +92,40 @@ export default function WorkspaceSetup({
       prefix = prefix.slice(0, j)
     }
 
-    const completion = matches.length === 1 ? `${prefix}/` : prefix
-    const newFull = `${parentDir}/${completion}`
-    const relative = newFull.startsWith(`${homedir}/`) ? newFull.slice(homedir.length + 1) : newFull
+    const completion = matches.length === 1 ? `${prefix}${sep}` : prefix
+    const newFull = `${parentDir}${sep}${completion}`
+    const homedirPrefix = `${homedir}${sep}`
+    const relative = newFull.startsWith(homedirPrefix)
+      ? newFull.slice(homedirPrefix.length)
+      : newFull
     setInputValue(relative)
   }
 
   const handleSubmit = (e: React.FormEvent): void => {
     e.preventDefault()
+    const homedirPrefix = `${homedir}${sep}`
     const fullPath = inputValue.trim()
-      ? homedir && !inputValue.startsWith('/')
-        ? `${homedir}/${inputValue.trim()}`
-        : inputValue.trim()
+      ? isAbsolute(inputValue) ? inputValue.trim() : `${homedir}${sep}${inputValue.trim()}`
       : homedir
     if (fullPath) {
       setWorkspaceCwd(fullPath)
-      setInputValue(fullPath.startsWith(homedir) ? fullPath.slice(homedir.length + 1) : fullPath)
+      setInputValue(fullPath.startsWith(homedirPrefix) ? fullPath.slice(homedirPrefix.length) : fullPath)
     }
   }
 
   const handleBrowse = async (): Promise<void> => {
     const path = await window.dialog.openFolder()
     if (path) {
+      const homedirPrefix = `${homedir}${sep}`
       setWorkspaceCwd(path)
-      setInputValue(path.startsWith(homedir) ? path.slice(homedir.length + 1) : path)
+      setInputValue(path.startsWith(homedirPrefix) ? path.slice(homedirPrefix.length) : path)
     }
   }
 
+  const homedirPrefixDisplay = `${homedir}${sep}`
   const displayValue =
-    cwd && cwd.startsWith(homedir) && inputValue === cwd
-      ? cwd.slice(homedir.length + 1)
+    cwd && cwd.startsWith(homedirPrefixDisplay) && inputValue === cwd
+      ? cwd.slice(homedirPrefixDisplay.length)
       : inputValue
 
   return (
@@ -149,7 +158,7 @@ export default function WorkspaceSetup({
       <form onSubmit={handleSubmit} className="flex items-center gap-2">
         <div className="flex items-stretch rounded-md border border-[var(--border)] overflow-hidden focus-within:border-[var(--border-focus)]">
           <span className="flex items-center px-3 text-sm text-[var(--text-secondary)] bg-[var(--bg-tertiary)] font-[family-name:var(--font-mono)] select-none whitespace-nowrap">
-            {homedir || '~'}/
+            {homedir || '~'}{homedir.includes('\\') ? '\\' : '/'}
           </span>
           <input
             ref={inputRef}
