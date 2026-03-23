@@ -2,7 +2,6 @@ import { useEffect, useRef } from 'react'
 import { Terminal } from '@xterm/xterm'
 import { FitAddon } from '@xterm/addon-fit'
 import '@xterm/xterm/css/xterm.css'
-import type { PaneCommand } from '../../../../shared/types'
 import {
   TERMINAL_FONT_SIZE,
   TERMINAL_LINE_HEIGHT,
@@ -12,6 +11,7 @@ import {
   RESIZE_DEBOUNCE_MS,
   REFIT_DELAY_MS
 } from '../../../../shared/constants'
+import { getAppDefinition } from '../../../../shared/app-registry'
 import {
   registerPty,
   isPtyActive,
@@ -32,7 +32,7 @@ function pollForClaudeSession(paneId: string, pid: number): void {
     const sessionId = await window.pty.getClaudeSession(pid)
     if (sessionId) {
       clearInterval(interval)
-      useTilingStore.getState().setPaneClaudeSession(paneId, sessionId)
+      useTilingStore.getState().setPaneParam(paneId, 'sessionId', sessionId)
     } else if (attempts >= SESSION_POLL_MAX_ATTEMPTS) {
       clearInterval(interval)
     }
@@ -44,8 +44,8 @@ interface TerminalPaneProps {
   isFocused: boolean
   isVisible: boolean
   cwd?: string
-  command?: PaneCommand
-  claudeSessionId?: string
+  app: string
+  params: Record<string, unknown>
 }
 
 export default function TerminalPane({
@@ -53,8 +53,8 @@ export default function TerminalPane({
   isFocused,
   isVisible,
   cwd,
-  command,
-  claudeSessionId
+  app,
+  params
 }: TerminalPaneProps): React.JSX.Element {
   const containerRef = useRef<HTMLDivElement>(null)
   const terminalRef = useRef<Terminal | null>(null)
@@ -114,27 +114,26 @@ export default function TerminalPane({
       return true
     })
 
+    // Determine what to spawn based on app definition + params
     registerPty(paneId)
-
-    // Determine what to spawn: resume claude session, start new command, or shell
+    const appDef = getAppDefinition(app)
     let createPty: Promise<number>
-    if (claudeSessionId) {
-      createPty = window.pty.createWithCommand(paneId, 'claude', ['--resume', claudeSessionId], cwd)
-    } else if (command) {
-      createPty = window.pty.createWithCommand(paneId, command.cmd, command.args, cwd)
+
+    if (appDef?.command) {
+      const args = appDef.resolveArgs ? appDef.resolveArgs(params) : appDef.command.args
+      createPty = window.pty.createWithCommand(paneId, appDef.command.cmd, args, cwd)
     } else {
       createPty = window.pty.create(paneId, cwd)
     }
 
-    const isClaudePane = !!command && command.cmd === 'claude'
     createPty.then((pid) => {
       if (disposed) return
       ptyReady = true
       fitAddon.fit()
       window.pty.resize(paneId, terminal.cols, terminal.rows)
 
-      // Poll for claude session ID if this is a claude pane
-      if (isClaudePane && !claudeSessionId) {
+      // Poll for claude session ID if this is a new claude pane (no sessionId yet)
+      if (app === 'claude' && !params.sessionId) {
         pollForClaudeSession(paneId, pid)
       }
     })

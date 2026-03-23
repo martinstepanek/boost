@@ -15,8 +15,11 @@ function randomColor(): string {
   return PANE_COLORS[Math.floor(Math.random() * PANE_COLORS.length)]
 }
 
-export function createPane(): PaneNode {
-  return { type: 'pane', id: generateId('pane'), color: randomColor() }
+export function createPane(
+  app: string = 'terminal',
+  params: Record<string, unknown> = {}
+): PaneNode {
+  return { type: 'pane', id: generateId('pane'), color: randomColor(), app, params }
 }
 
 export function findNode(root: TilingNode, id: string): TilingNode | null {
@@ -219,7 +222,13 @@ function swapPanes(root: TilingNode, idA: string, idB: string): TilingNode {
   if (!nodeA || !nodeB || nodeA.type !== 'pane' || nodeB.type !== 'pane') return root
 
   const placeholderId = generateId('swap')
-  const placeholder: PaneNode = { type: 'pane', id: placeholderId, color: '' }
+  const placeholder: PaneNode = {
+    type: 'pane',
+    id: placeholderId,
+    color: '',
+    app: 'terminal',
+    params: {}
+  }
   let tree = replacePaneNode(root, idA, placeholder)
   tree = replacePaneNode(tree, idB, nodeA)
   tree = replacePaneNode(tree, placeholderId, nodeB)

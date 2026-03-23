@@ -1,12 +1,6 @@
 import { create } from 'zustand'
 import { subscribeWithSelector } from 'zustand/middleware'
-import type {
-  Direction,
-  PaneCommand,
-  PersistedState,
-  TilingNode,
-  WorkspaceState
-} from '../../../shared/types'
+import type { Direction, PersistedState, TilingNode, WorkspaceState } from '../../../shared/types'
 import {
   createPane,
   extractPane,
@@ -32,7 +26,7 @@ interface TilingStore {
   toggleCommandPalette(): void
   closeCommandPalette(): void
   splitFocusedPane(): void
-  createPaneWithCommand(command: PaneCommand): void
+  createPaneForApp(appId: string): void
   closeFocusedPane(): void
   moveFocus(direction: Direction): void
   setFocusedPane(paneId: string): void
@@ -41,7 +35,7 @@ interface TilingStore {
   swapFocusedPane(direction: Direction): void
   moveFocusedPaneToWorkspace(n: number): void
   resizeSplit(splitId: string, newRatio: number): void
-  setPaneClaudeSession(paneId: string, sessionId: string): void
+  setPaneParam(paneId: string, key: string, value: unknown): void
   getPersistedState(): PersistedState
 }
 
@@ -117,13 +111,12 @@ export const useTilingStore = create<TilingStore>()(
       set({ commandPaletteOpen: false })
     },
 
-    createPaneWithCommand(command): void {
+    createPaneForApp(appId): void {
       const { activeWorkspace, workspaces, splitDirection } = get()
       const ws = getWorkspace(workspaces, activeWorkspace)
       if (!ws) return
 
-      const pane = createPane()
-      pane.command = command
+      const pane = createPane(appId)
 
       if (ws.layout === null) {
         set({
@@ -326,17 +319,17 @@ export const useTilingStore = create<TilingStore>()(
       })
     },
 
-    setPaneClaudeSession(paneId, sessionId): void {
+    setPaneParam(paneId, key, value): void {
       const { workspaces } = get()
       const newWorkspaces = { ...workspaces }
-      for (const [key, ws] of Object.entries(newWorkspaces)) {
+      for (const [wsKey, ws] of Object.entries(newWorkspaces)) {
         if (ws.layout === null) continue
         const updated = updatePaneInTree(ws.layout, paneId, (pane) => ({
           ...pane,
-          claudeSessionId: sessionId
+          params: { ...pane.params, [key]: value }
         }))
         if (updated !== ws.layout) {
-          newWorkspaces[Number(key)] = { ...ws, layout: updated }
+          newWorkspaces[Number(wsKey)] = { ...ws, layout: updated }
         }
       }
       set({ workspaces: newWorkspaces })

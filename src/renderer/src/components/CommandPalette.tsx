@@ -13,18 +13,18 @@ export default function CommandPalette(): React.JSX.Element | null {
   const open = useTilingStore((s) => s.commandPaletteOpen)
   const closeCommandPalette = useTilingStore((s) => s.closeCommandPalette)
   const splitFocusedPane = useTilingStore((s) => s.splitFocusedPane)
-  const createPaneWithCommand = useTilingStore((s) => s.createPaneWithCommand)
+  const createPaneForApp = useTilingStore((s) => s.createPaneForApp)
 
   const handleSelect = useCallback(
     (app: AppDefinition) => {
       closeCommandPalette()
       if (app.command) {
-        createPaneWithCommand(app.command)
+        createPaneForApp(app.id)
       } else {
         splitFocusedPane()
       }
     },
-    [closeCommandPalette, splitFocusedPane, createPaneWithCommand]
+    [closeCommandPalette, splitFocusedPane, createPaneForApp]
   )
 
   useEffect(() => {
