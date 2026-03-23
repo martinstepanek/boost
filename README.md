@@ -3,15 +3,19 @@
 A tiling terminal emulator built with Electron, React, and TypeScript.
 
 ### i3-style tiling window manager
+
 Binary split tree layout with per-pane split direction, keyboard-driven focus navigation, pane movement/swap, drag-to-resize, and 9 independent workspaces.
 
 ### Cross-platform terminal support
+
 Run **Bash** (Linux/macOS), **WSL** (Windows), or **PowerShell** (Windows) — each workspace picks its own backend target.
 
 ### Full state persistence
+
 Close the app, reopen it — your entire layout, workspaces, working directories, and pane arrangement are restored exactly as you left them.
 
 ### Claude Code with session persistence
+
 Launch Claude Code from the command palette. Your conversation session ID is tracked per-pane and automatically resumed on next app start — pick up right where you left off.
 
 ## More Features
