@@ -43,7 +43,8 @@ const ptyAPI = {
 
 const dialogAPI = {
   openFolder: (): Promise<string | null> => ipcRenderer.invoke('dialog:openFolder'),
-  getHomedir: (): Promise<string> => ipcRenderer.invoke('dialog:getHomedir')
+  getHomedir: (): Promise<string> => ipcRenderer.invoke('dialog:getHomedir'),
+  listDir: (dirPath: string): Promise<string[]> => ipcRenderer.invoke('dialog:listDir', dirPath)
 }
 
 // Expose standard Electron APIs

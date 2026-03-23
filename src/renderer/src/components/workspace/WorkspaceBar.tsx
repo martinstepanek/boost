@@ -27,7 +27,8 @@ export default function WorkspaceBar(): React.JSX.Element {
     >
       {workspaceKeys.map((n) => {
         const isActive = n === activeWorkspace
-        const folderName = workspaces[n]?.cwd ? workspaces[n].cwd.split('/').pop() : ''
+        const cwdPath = workspaces[n]?.cwd?.replace(/\/+$/, '') ?? ''
+        const folderName = cwdPath ? cwdPath.split('/').pop() : ''
         return (
           <Button
             key={n}

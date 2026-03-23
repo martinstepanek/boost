@@ -64,6 +64,16 @@ app.whenReady().then(() => {
     return homedir()
   })
 
+  ipcMain.handle('dialog:listDir', async (_event, dirPath: string) => {
+    const { readdir } = await import('fs/promises')
+    try {
+      const entries = await readdir(dirPath, { withFileTypes: true })
+      return entries.filter((e) => e.isDirectory()).map((e) => e.name)
+    } catch {
+      return []
+    }
+  })
+
   ipcMain.handle('dialog:openFolder', async () => {
     const win = BrowserWindow.getAllWindows()[0]
     if (!win) return null

@@ -32,6 +32,36 @@ export default function WorkspaceSetup({
     }
   }, [isActive, hasLayout])
 
+  const handleTab = async (e: React.KeyboardEvent): Promise<void> => {
+    if (e.key !== 'Tab') return
+    e.preventDefault()
+
+    const value = inputValue || ''
+    const fullPath = value.startsWith('/') ? value : `${homedir}/${value}`
+    const lastSlash = fullPath.lastIndexOf('/')
+    const parentDir = fullPath.slice(0, lastSlash) || '/'
+    const partial = fullPath.slice(lastSlash + 1)
+
+    const entries = await window.dialog.listDir(parentDir)
+    const matches = entries.filter((name) => name.startsWith(partial))
+
+    if (matches.length === 0) return
+
+    // Find longest common prefix
+    let prefix = matches[0]
+    for (let i = 1; i < matches.length; i++) {
+      let j = 0
+      while (j < prefix.length && j < matches[i].length && prefix[j] === matches[i][j]) j++
+      prefix = prefix.slice(0, j)
+    }
+
+    // If single match, append /
+    const completion = matches.length === 1 ? `${prefix}/` : prefix
+    const newFull = `${parentDir}/${completion}`
+    const relative = newFull.startsWith(`${homedir}/`) ? newFull.slice(homedir.length + 1) : newFull
+    setInputValue(relative)
+  }
+
   const handleSubmit = (e: React.FormEvent): void => {
     e.preventDefault()
     const fullPath = inputValue.trim()
@@ -73,6 +103,7 @@ export default function WorkspaceSetup({
             ref={inputRef}
             value={displayValue}
             onChange={(e) => setInputValue(e.target.value)}
+            onKeyDown={handleTab}
             placeholder="project"
             autoFocus
             spellCheck={false}

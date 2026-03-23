@@ -19,6 +19,7 @@ interface PtyAPI {
 interface DialogAPI {
   openFolder: () => Promise<string | null>
   getHomedir: () => Promise<string>
+  listDir: (dirPath: string) => Promise<string[]>
 }
 
 declare global {
