@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useTilingStore } from '../../stores/tiling-store'
 import { Button } from '../ui/button'
 
@@ -10,9 +10,12 @@ export default function WorkspaceSetup({
   workspaceNumber
 }: WorkspaceSetupProps): React.JSX.Element {
   const cwd = useTilingStore((s) => s.workspaces[workspaceNumber]?.cwd ?? '')
+  const isActive = useTilingStore((s) => s.activeWorkspace === workspaceNumber)
+  const hasLayout = useTilingStore((s) => s.workspaces[workspaceNumber]?.layout !== null)
   const setWorkspaceCwd = useTilingStore((s) => s.setWorkspaceCwd)
   const [inputValue, setInputValue] = useState(cwd)
   const [homedir, setHomedir] = useState('')
+  const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     window.dialog.getHomedir().then(setHomedir)
@@ -22,10 +25,19 @@ export default function WorkspaceSetup({
     setInputValue(cwd)
   }, [cwd])
 
+  // Focus input when workspace becomes active and has no terminals
+  useEffect(() => {
+    if (isActive && !hasLayout) {
+      inputRef.current?.focus()
+    }
+  }, [isActive, hasLayout])
+
   const handleSubmit = (e: React.FormEvent): void => {
     e.preventDefault()
     const fullPath = inputValue.trim()
-      ? (homedir && !inputValue.startsWith('/') ? `${homedir}/${inputValue.trim()}` : inputValue.trim())
+      ? homedir && !inputValue.startsWith('/')
+        ? `${homedir}/${inputValue.trim()}`
+        : inputValue.trim()
       : homedir
     if (fullPath) {
       setWorkspaceCwd(fullPath)
@@ -42,9 +54,10 @@ export default function WorkspaceSetup({
   }
 
   // Show relative path in input if it starts with homedir
-  const displayValue = cwd && cwd.startsWith(homedir) && inputValue === cwd
-    ? cwd.slice(homedir.length + 1)
-    : inputValue
+  const displayValue =
+    cwd && cwd.startsWith(homedir) && inputValue === cwd
+      ? cwd.slice(homedir.length + 1)
+      : inputValue
 
   return (
     <div
@@ -57,9 +70,14 @@ export default function WorkspaceSetup({
             {homedir || '~'}/
           </span>
           <input
+            ref={inputRef}
             value={displayValue}
             onChange={(e) => setInputValue(e.target.value)}
             placeholder="project"
+            autoFocus
+            spellCheck={false}
+            autoComplete="off"
+            autoCorrect="off"
             className="w-[300px] bg-[var(--bg-secondary)] px-3 py-1.5 text-sm text-[var(--text-primary)] font-[family-name:var(--font-mono)] placeholder:text-[var(--text-secondary)] focus:outline-none border-none"
           />
         </div>
