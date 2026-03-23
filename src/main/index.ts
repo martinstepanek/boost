@@ -1,4 +1,4 @@
-import { app, shell, BrowserWindow } from 'electron'
+import { app, shell, BrowserWindow, dialog, ipcMain } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import { createIPCHandler } from 'electron-trpc/main'
@@ -16,7 +16,6 @@ function createWindow(): void {
     height: WINDOW_HEIGHT,
     show: false,
     autoHideMenuBar: true,
-    menuBarVisible: false,
     ...(process.platform === 'linux' ? { icon } : {}),
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
@@ -59,6 +58,21 @@ app.whenReady().then(() => {
   })
 
   setupPtyManager()
+
+  ipcMain.handle('dialog:getHomedir', () => {
+    return require('os').homedir()
+  })
+
+  ipcMain.handle('dialog:openFolder', async () => {
+    const win = BrowserWindow.getAllWindows()[0]
+    if (!win) return null
+    const result = await dialog.showOpenDialog(win, {
+      properties: ['openDirectory']
+    })
+    if (result.canceled || result.filePaths.length === 0) return null
+    return result.filePaths[0]
+  })
+
   createWindow()
 
   app.on('activate', () => {

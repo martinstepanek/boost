@@ -15,8 +15,9 @@ export interface SplitNode {
 export type TilingNode = PaneNode | SplitNode
 
 export interface WorkspaceState {
-  layout: TilingNode
+  layout: TilingNode | null
   focusedPaneId: string
+  cwd: string
 }
 
 export interface PersistedState {

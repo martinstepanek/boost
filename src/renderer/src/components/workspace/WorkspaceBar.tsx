@@ -1,5 +1,6 @@
 import { useShallow } from 'zustand/shallow'
 import { useTilingStore } from '../../stores/tiling-store'
+import { Button } from '../ui/button'
 
 export default function WorkspaceBar(): React.JSX.Element {
   const activeWorkspace = useTilingStore((s) => s.activeWorkspace)
@@ -10,60 +11,37 @@ export default function WorkspaceBar(): React.JSX.Element {
         .sort((a, b) => a - b)
     )
   )
+  const workspaces = useTilingStore((s) => s.workspaces)
   const switchWorkspace = useTilingStore((s) => s.switchWorkspace)
   const splitDirection = useTilingStore((s) => s.splitDirection)
 
   return (
     <div
-      className="flex items-center shrink-0"
+      className="flex items-center shrink-0 gap-1.5"
       style={{
         height: '32px',
         padding: '0 12px',
-        gap: '6px',
         backgroundColor: 'var(--bg-secondary)',
         borderTop: '1px solid var(--border)'
       }}
     >
-      {workspaceKeys.map((n) => (
-        <button
-          key={n}
-          style={{
-            padding: '3px 10px',
-            fontSize: '11px',
-            fontFamily: 'var(--font-ui)',
-            fontWeight: 500,
-            borderRadius: '5px',
-            border: 'none',
-            cursor: 'pointer',
-            transition: 'all 120ms ease',
-            backgroundColor: n === activeWorkspace ? 'rgba(10, 132, 255, 0.15)' : 'transparent',
-            color: n === activeWorkspace ? 'var(--accent)' : 'var(--text-secondary)'
-          }}
-          onMouseEnter={(e) => {
-            if (n !== activeWorkspace) {
-              e.currentTarget.style.backgroundColor = 'var(--bg-tertiary)'
-              e.currentTarget.style.color = 'var(--text-primary)'
-            }
-          }}
-          onMouseLeave={(e) => {
-            if (n !== activeWorkspace) {
-              e.currentTarget.style.backgroundColor = 'transparent'
-              e.currentTarget.style.color = 'var(--text-secondary)'
-            }
-          }}
-          onClick={() => switchWorkspace(n)}
-        >
-          {n}
-        </button>
-      ))}
-      <span
-        style={{
-          marginLeft: 'auto',
-          fontSize: '11px',
-          fontFamily: 'var(--font-ui)',
-          color: 'var(--text-secondary)'
-        }}
-      >
+      {workspaceKeys.map((n) => {
+        const isActive = n === activeWorkspace
+        const folderName = workspaces[n]?.cwd ? workspaces[n].cwd.split('/').pop() : ''
+        return (
+          <Button
+            key={n}
+            variant={isActive ? 'workspaceActive' : 'workspace'}
+            size="sm"
+            className="rounded-[5px] font-[family-name:var(--font-ui)]"
+            onClick={() => switchWorkspace(n)}
+          >
+            {n}
+            {folderName ? ` ${folderName}` : ''}
+          </Button>
+        )
+      })}
+      <span className="ml-auto text-[11px] text-[var(--text-secondary)] font-[family-name:var(--font-ui)]">
         {splitDirection === 'horizontal' ? '⬌' : '⬍'}
       </span>
     </div>

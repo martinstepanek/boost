@@ -24,12 +24,14 @@ interface TerminalPaneProps {
   paneId: string
   isFocused: boolean
   isVisible: boolean
+  cwd?: string
 }
 
 export default function TerminalPane({
   paneId,
   isFocused,
-  isVisible
+  isVisible,
+  cwd
 }: TerminalPaneProps): React.JSX.Element {
   const containerRef = useRef<HTMLDivElement>(null)
   const terminalRef = useRef<Terminal | null>(null)
@@ -90,7 +92,7 @@ export default function TerminalPane({
     })
 
     registerPty(paneId)
-    window.pty.create(paneId).then(() => {
+    window.pty.create(paneId, cwd).then(() => {
       if (disposed) return
       ptyReady = true
       fitAddon.fit()

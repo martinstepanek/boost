@@ -26,8 +26,6 @@ export function useKeybindings(): void {
       const code = e.code
       const shift = e.shiftKey
 
-
-
       // Workspace: Alt+1-9 / Alt+Shift+1-9
       if (code >= 'Digit1' && code <= 'Digit9') {
         const n = parseInt(code.slice(5))

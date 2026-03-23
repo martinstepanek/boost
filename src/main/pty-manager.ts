@@ -15,7 +15,7 @@ function getMainWindow(): BrowserWindow | null {
 }
 
 export function setupPtyManager(): void {
-  ipcMain.handle('pty:create', (_event, paneId: string) => {
+  ipcMain.handle('pty:create', (_event, paneId: string, cwd?: string) => {
     const existing = ptys.get(paneId)
     if (existing) {
       existing.kill()
@@ -26,7 +26,7 @@ export function setupPtyManager(): void {
       name: PTY_TERM_NAME,
       cols: PTY_INITIAL_COLS,
       rows: PTY_INITIAL_ROWS,
-      cwd: homedir(),
+      cwd: cwd || homedir(),
       env: process.env as Record<string, string>
     })
 

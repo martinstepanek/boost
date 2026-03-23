@@ -10,7 +10,8 @@ const persistedStateSchema = z.object({
     z.string(),
     z.object({
       layout: z.unknown(),
-      focusedPaneId: z.string()
+      focusedPaneId: z.string(),
+      cwd: z.string()
     })
   )
 })

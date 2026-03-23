@@ -5,6 +5,7 @@ import { usePersistence } from './hooks/use-persistence'
 import TilingContainer from './components/layout/TilingContainer'
 import TerminalOverlay from './components/layout/TerminalOverlay'
 import WorkspaceBar from './components/workspace/WorkspaceBar'
+import WorkspaceSetup from './components/workspace/WorkspaceSetup'
 
 function App(): React.JSX.Element {
   const { isLoaded } = usePersistence()
@@ -33,17 +34,23 @@ function App(): React.JSX.Element {
 
   return (
     <div className="flex flex-col h-full" style={{ backgroundColor: 'var(--bg-primary)' }}>
-      {workspaceKeys.map((n) => (
-        <div
-          key={n}
-          className="flex-1 flex overflow-hidden"
-          style={{ display: n === activeWorkspace ? 'flex' : 'none' }}
-        >
-          {workspaces[n] ? (
-            <TilingContainer node={workspaces[n].layout} isVisible={n === activeWorkspace} />
-          ) : null}
-        </div>
-      ))}
+      {workspaceKeys.map((n) => {
+        const ws = workspaces[n]
+        const isActive = n === activeWorkspace
+        return (
+          <div
+            key={n}
+            className="flex-1 flex overflow-hidden"
+            style={{ display: isActive ? 'flex' : 'none' }}
+          >
+            {ws?.layout !== null && ws?.layout !== undefined ? (
+              <TilingContainer node={ws.layout} isVisible={isActive} />
+            ) : (
+              <WorkspaceSetup workspaceNumber={n} />
+            )}
+          </div>
+        )
+      })}
       <TerminalOverlay />
       <WorkspaceBar />
     </div>

@@ -8,7 +8,8 @@ process.once('loaded', () => {
 })
 
 const ptyAPI = {
-  create: (paneId: string): Promise<void> => ipcRenderer.invoke('pty:create', paneId),
+  create: (paneId: string, cwd?: string): Promise<void> =>
+    ipcRenderer.invoke('pty:create', paneId, cwd),
   write: (paneId: string, data: string): void => {
     ipcRenderer.send('pty:write', paneId, data)
   },
@@ -32,11 +33,17 @@ const ptyAPI = {
   }
 }
 
+const dialogAPI = {
+  openFolder: (): Promise<string | null> => ipcRenderer.invoke('dialog:openFolder'),
+  getHomedir: (): Promise<string> => ipcRenderer.invoke('dialog:getHomedir')
+}
+
 // Expose standard Electron APIs
 if (process.contextIsolated) {
   try {
     contextBridge.exposeInMainWorld('electron', electronAPI)
     contextBridge.exposeInMainWorld('pty', ptyAPI)
+    contextBridge.exposeInMainWorld('dialog', dialogAPI)
   } catch (error) {
     console.error(error)
   }
@@ -45,4 +52,6 @@ if (process.contextIsolated) {
   window.electron = electronAPI
   // @ts-ignore (define in dts)
   window.pty = ptyAPI
+  // @ts-ignore (define in dts)
+  window.dialog = dialogAPI
 }

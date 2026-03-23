@@ -1,11 +1,4 @@
-import type {
-  PaneNode,
-  SplitNode,
-  TilingNode,
-  WorkspaceState,
-  Direction,
-  Rect
-} from '../../../shared/types'
+import type { PaneNode, SplitNode, TilingNode, Direction, Rect } from '../../../shared/types'
 import {
   PANE_COLORS,
   SPLIT_RATIO_MIN,
@@ -24,11 +17,6 @@ function randomColor(): string {
 
 export function createPane(): PaneNode {
   return { type: 'pane', id: generateId('pane'), color: randomColor() }
-}
-
-export function createDefaultWorkspace(): WorkspaceState {
-  const pane = createPane()
-  return { layout: pane, focusedPaneId: pane.id }
 }
 
 export function findNode(root: TilingNode, id: string): TilingNode | null {
