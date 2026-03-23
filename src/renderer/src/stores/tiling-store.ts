@@ -6,10 +6,12 @@ import {
   extractPane,
   findPaneInDirection,
   getAllPaneIds,
+  movePaneInDirection,
   removePane,
   splitPane,
   updateSplitRatio
 } from '../lib/tiling-tree'
+import { destroyTerminal } from '../components/layout/TerminalPane'
 
 interface TilingStore {
   activeWorkspace: number
@@ -22,6 +24,7 @@ interface TilingStore {
   moveFocus(direction: Direction): void
   setFocusedPane(paneId: string): void
   switchWorkspace(n: number): void
+  swapFocusedPane(direction: Direction): void
   moveFocusedPaneToWorkspace(n: number): void
   resizeSplit(splitId: string, newRatio: number): void
   getPersistedState(): PersistedState
@@ -73,7 +76,11 @@ export const useTilingStore = create<TilingStore>()(
       const ws = workspaces[activeWorkspace]
       if (!ws) return
 
-      const newRoot = removePane(ws.layout, ws.focusedPaneId)
+      const closedPaneId = ws.focusedPaneId
+      const newRoot = removePane(ws.layout, closedPaneId)
+
+      // Clean up terminal and PTY
+      destroyTerminal(closedPaneId)
 
       if (newRoot === null) {
         // Last pane in workspace — delete it
@@ -109,6 +116,22 @@ export const useTilingStore = create<TilingStore>()(
             layout: newRoot,
             focusedPaneId: newFocused
           }
+        }
+      })
+    },
+
+    swapFocusedPane(direction): void {
+      const { activeWorkspace, workspaces } = get()
+      const ws = workspaces[activeWorkspace]
+      if (!ws) return
+
+      const newLayout = movePaneInDirection(ws.layout, ws.focusedPaneId, direction)
+      if (newLayout === ws.layout) return
+
+      set({
+        workspaces: {
+          ...workspaces,
+          [activeWorkspace]: { ...ws, layout: newLayout }
         }
       })
     },

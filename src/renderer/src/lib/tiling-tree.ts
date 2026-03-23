@@ -241,6 +241,62 @@ export function findPaneInDirection(
   return bestId
 }
 
+export function movePaneInDirection(root: TilingNode, paneId: string, direction: Direction): TilingNode {
+  const parentInfo = findParent(root, paneId)
+  if (!parentInfo) return root // pane is root, can't move
+
+  const { parent, childIndex } = parentInfo
+  const newDirection: 'horizontal' | 'vertical' =
+    direction === 'left' || direction === 'right' ? 'horizontal' : 'vertical'
+  // Should focused pane be second child (right/down)?
+  const focusedSecond = direction === 'right' || direction === 'down'
+  const focusedIndex = focusedSecond ? 1 : 0
+
+  // If already correct direction and position, try to move further up the tree
+  if (parent.direction === newDirection && childIndex === focusedIndex) {
+    // Already in the right spot in this split — try to swap with neighbor
+    const targetId = findPaneInDirection(root, paneId, direction)
+    if (!targetId) return root
+
+    // Swap the two panes
+    function replacePaneNode(node: TilingNode, fromId: string, to: TilingNode): TilingNode {
+      if (node.type === 'pane') return node.id === fromId ? to : node
+      return {
+        ...node,
+        children: [
+          replacePaneNode(node.children[0], fromId, to),
+          replacePaneNode(node.children[1], fromId, to)
+        ]
+      }
+    }
+    const nodeA = findNode(root, paneId)
+    const nodeB = findNode(root, targetId)
+    if (!nodeA || !nodeB || nodeA.type !== 'pane' || nodeB.type !== 'pane') return root
+    const placeholder: PaneNode = { type: 'pane', id: '__swap__', color: '' }
+    let tree = replacePaneNode(root, paneId, placeholder)
+    tree = replacePaneNode(tree, targetId, nodeA)
+    tree = replacePaneNode(tree, '__swap__', nodeB)
+    return tree
+  }
+
+  // Change direction and/or reorder children
+  function updateSplit(node: TilingNode): TilingNode {
+    if (node.type === 'pane') return node
+    if (node.id === parent.id) {
+      const children: [TilingNode, TilingNode] = focusedSecond
+        ? [node.children[1 - childIndex], node.children[childIndex]]
+        : [node.children[childIndex], node.children[1 - childIndex]]
+      return { ...node, direction: newDirection, children }
+    }
+    return {
+      ...node,
+      children: [updateSplit(node.children[0]), updateSplit(node.children[1])]
+    }
+  }
+
+  return updateSplit(root)
+}
+
 export function extractPane(
   root: TilingNode,
   paneId: string

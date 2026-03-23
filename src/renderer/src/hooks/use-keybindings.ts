@@ -55,11 +55,15 @@ export function useKeybindings(): void {
         return
       }
 
-      // Focus navigation
+      // Focus navigation / swap panes
       const direction = DIRECTION_MAP[key]
-      if (!shift && direction) {
+      if (direction) {
         e.preventDefault()
-        store.moveFocus(direction)
+        if (shift) {
+          store.swapFocusedPane(direction)
+        } else {
+          store.moveFocus(direction)
+        }
         return
       }
     }
