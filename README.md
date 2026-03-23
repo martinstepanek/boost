@@ -1,21 +1,27 @@
 # Boost
 
-A tiling terminal emulator with i3-style window management, built with Electron, React, and TypeScript.
+A tiling terminal emulator built with Electron, React, and TypeScript.
 
-## Features
+### i3-style tiling window manager
+Binary split tree layout with per-pane split direction, keyboard-driven focus navigation, pane movement/swap, drag-to-resize, and 9 independent workspaces.
 
-- **i3-style tiling** — binary split tree layout, per-pane split direction, 50/50 splits
+### Cross-platform terminal support
+Run **Bash** (Linux/macOS), **WSL** (Windows), or **PowerShell** (Windows) — each workspace picks its own backend target.
+
+### Full state persistence
+Close the app, reopen it — your entire layout, workspaces, working directories, and pane arrangement are restored exactly as you left them.
+
+### Claude Code with session persistence
+Launch Claude Code from the command palette. Your conversation session ID is tracked per-pane and automatically resumed on next app start — pick up right where you left off.
+
+## More Features
+
 - **Workspaces 1–9** — switch with `Alt+1`–`Alt+9`, created on demand
-- **Focus navigation** — `Alt+H/J/K/L` or `Alt+Arrows`
-- **Pane management** — split, close, move/swap panes with keyboard
-- **Command palette** — `Alt+D` to launch Terminal or Claude Code
-- **Terminal emulation** — xterm.js + node-pty, JetBrains Mono font
-- **Claude Code integration** — launch via command palette, session persistence across restarts
-- **Backend targets** — WSL, PowerShell (Windows), native shell (Linux/macOS)
+- **Command palette** — `Alt+D` to launch Terminal, Claude Code, or future apps
 - **Per-workspace path** — configurable working directory with Tab autocomplete
-- **State persistence** — layout, workspaces, targets, and focus restored on restart
-- **Drag-to-resize** — split dividers are draggable
+- **Focus navigation** — `Alt+H/J/K/L` or `Alt+Arrows`
 - **Copy/paste** — `Ctrl+C` copies selected text, `Ctrl+V` pastes
+- **JetBrains Mono** — terminal font with Apple-inspired dark theme
 
 ## Tech Stack
 
