@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react'
 import type { PaneNode } from '../../../../shared/types'
 import { useTilingStore } from '../../stores/tiling-store'
-import { paneRectStore } from './TerminalOverlay'
+import { paneRectStore } from '../../lib/pane-rect-store'
 
 interface PaneProps {
   pane: PaneNode

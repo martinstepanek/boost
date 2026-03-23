@@ -1,6 +1,8 @@
 import { useEffect, useRef } from 'react'
+import { shallow } from 'zustand/shallow'
 import { trpc } from '../lib/trpc'
 import { useTilingStore } from '../stores/tiling-store'
+import { SAVE_DEBOUNCE_MS, AUTOSAVE_INTERVAL_MS } from '../../../shared/constants'
 
 export function usePersistence(): { isLoaded: boolean } {
   const initialized = useTilingStore((s) => s.initialized)
@@ -8,8 +10,12 @@ export function usePersistence(): { isLoaded: boolean } {
   const loadQuery = trpc.loadState.useQuery(undefined, { enabled: !initialized })
   const saveMutation = trpc.saveState.useMutation()
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const saveMutationRef = useRef(saveMutation)
 
-  // Initialize store from persisted state
+  useEffect(() => {
+    saveMutationRef.current = saveMutation
+  }, [saveMutation])
+
   useEffect(() => {
     if (initialized) return
     if (loadQuery.isSuccess) {
@@ -19,7 +25,6 @@ export function usePersistence(): { isLoaded: boolean } {
     }
   }, [initialized, loadQuery.isSuccess, loadQuery.isError, loadQuery.data, initialize])
 
-  // Debounced save on state changes + periodic autosave
   useEffect(() => {
     if (!initialized) return
 
@@ -29,23 +34,23 @@ export function usePersistence(): { isLoaded: boolean } {
         if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
         saveTimerRef.current = setTimeout(() => {
           const state = useTilingStore.getState().getPersistedState()
-          saveMutation.mutate(state)
-        }, 1000)
+          saveMutationRef.current.mutate(state)
+        }, SAVE_DEBOUNCE_MS)
       },
-      { equalityFn: (a, b) => a === b }
+      { equalityFn: shallow }
     )
 
     const interval = setInterval(() => {
       const state = useTilingStore.getState().getPersistedState()
-      saveMutation.mutate(state)
-    }, 60_000)
+      saveMutationRef.current.mutate(state)
+    }, AUTOSAVE_INTERVAL_MS)
 
     return () => {
       unsubscribe()
       clearInterval(interval)
       if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
     }
-  }, [initialized, saveMutation])
+  }, [initialized])
 
   return { isLoaded: initialized }
 }

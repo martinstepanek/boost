@@ -38,6 +38,7 @@ export default function SplitContainer({
       const onMouseUp = (): void => {
         document.removeEventListener('mousemove', onMouseMove)
         document.removeEventListener('mouseup', onMouseUp)
+        window.removeEventListener('blur', onMouseUp)
         document.body.style.cursor = ''
         document.body.style.userSelect = ''
       }
@@ -46,6 +47,7 @@ export default function SplitContainer({
       document.body.style.userSelect = 'none'
       document.addEventListener('mousemove', onMouseMove)
       document.addEventListener('mouseup', onMouseUp)
+      window.addEventListener('blur', onMouseUp)
     },
     [split.id, isHorizontal, resizeSplit]
   )

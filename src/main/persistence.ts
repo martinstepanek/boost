@@ -7,12 +7,23 @@ function getStatePath(): string {
   return join(app.getPath('userData'), 'tiling-state.json')
 }
 
+function isValidPersistedState(data: unknown): data is PersistedState {
+  if (typeof data !== 'object' || data === null) return false
+  const obj = data as Record<string, unknown>
+  return (
+    obj.version === 1 &&
+    typeof obj.activeWorkspace === 'number' &&
+    typeof obj.workspaces === 'object' &&
+    obj.workspaces !== null
+  )
+}
+
 export async function loadState(): Promise<PersistedState | null> {
   try {
     const data = await readFile(getStatePath(), 'utf-8')
     const parsed = JSON.parse(data)
-    if (parsed.version !== 1) return null
-    return parsed as PersistedState
+    if (!isValidPersistedState(parsed)) return null
+    return parsed
   } catch {
     return null
   }

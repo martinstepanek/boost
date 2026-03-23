@@ -2,46 +2,8 @@ import { useSyncExternalStore } from 'react'
 import { useShallow } from 'zustand/shallow'
 import { useTilingStore } from '../../stores/tiling-store'
 import { getAllPaneIds } from '../../lib/tiling-tree'
+import { paneRectStore } from '../../lib/pane-rect-store'
 import TerminalPane from './TerminalPane'
-
-interface SimpleRect {
-  x: number
-  y: number
-  w: number
-  h: number
-}
-
-// Simple external store for pane DOM rects
-type Listener = () => void
-class PaneRectStoreClass {
-  private rects = new Map<string, SimpleRect>()
-  private listeners = new Set<Listener>()
-  private snapshot = new Map<string, SimpleRect>()
-
-  set(id: string, rect: SimpleRect): void {
-    this.rects.set(id, rect)
-  }
-
-  delete(id: string): void {
-    this.rects.delete(id)
-  }
-
-  notify(): void {
-    this.snapshot = new Map(this.rects)
-    for (const l of this.listeners) l()
-  }
-
-  subscribe(listener: Listener): () => void {
-    this.listeners.add(listener)
-    return () => this.listeners.delete(listener)
-  }
-
-  getSnapshot(): Map<string, SimpleRect> {
-    return this.snapshot
-  }
-}
-
-export const paneRectStore = new PaneRectStoreClass()
 
 export default function TerminalOverlay(): React.JSX.Element {
   const rects = useSyncExternalStore(
@@ -51,7 +13,6 @@ export default function TerminalOverlay(): React.JSX.Element {
 
   const focusedPaneId = useTilingStore((s) => s.workspaces[s.activeWorkspace]?.focusedPaneId)
 
-  // Collect all pane IDs across all workspaces
   const allPaneIds = useTilingStore(
     useShallow((s) => {
       const ids: string[] = []
@@ -62,7 +23,6 @@ export default function TerminalOverlay(): React.JSX.Element {
     })
   )
 
-  // Determine which panes are in the active workspace
   const activePaneIds = useTilingStore(
     useShallow((s) => {
       const ws = s.workspaces[s.activeWorkspace]

@@ -9,23 +9,21 @@ const persistedStateSchema = z.object({
   workspaces: z.record(
     z.string(),
     z.object({
-      layout: z.any(),
+      layout: z.unknown(),
       focusedPaneId: z.string()
     })
   )
 })
 
 export const appRouter = router({
-  ping: publicProcedure.query(() => {
-    return 'pong'
-  }),
+  ping: publicProcedure.query(() => 'pong'),
 
   loadState: publicProcedure.query(async () => {
     return await loadState()
   }),
 
   saveState: publicProcedure.input(persistedStateSchema).mutation(async ({ input }) => {
-    await saveState(input as unknown as PersistedState)
+    await saveState(input as PersistedState)
     return { success: true }
   })
 })

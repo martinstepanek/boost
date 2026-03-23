@@ -6,42 +6,24 @@ import type {
   Direction,
   Rect
 } from '../../../shared/types'
+import {
+  PANE_COLORS,
+  SPLIT_RATIO_MIN,
+  SPLIT_RATIO_MAX,
+  DIRECTION_EPSILON,
+  DIRECTION_PERP_WEIGHT
+} from '../../../shared/constants'
 
-const PANE_COLORS = [
-  '#1e3a5f',
-  '#3b1f2b',
-  '#1f3b2b',
-  '#3b2f1f',
-  '#2b1f3b',
-  '#1f2b3b',
-  '#3b1f1f',
-  '#1f3b3b',
-  '#2f3b1f',
-  '#1f1f3b',
-  '#4a2040',
-  '#204a40',
-  '#40204a',
-  '#4a4020',
-  '#20404a'
-]
-
-let paneCounter = 0
-let splitCounter = 0
-
-export function generatePaneId(): string {
-  return `pane-${++paneCounter}-${Math.random().toString(36).slice(2, 6)}`
+function generateId(prefix: string): string {
+  return `${prefix}-${crypto.randomUUID().slice(0, 8)}`
 }
 
-export function generateSplitId(): string {
-  return `split-${++splitCounter}-${Math.random().toString(36).slice(2, 6)}`
-}
-
-export function generateRandomColor(): string {
+function randomColor(): string {
   return PANE_COLORS[Math.floor(Math.random() * PANE_COLORS.length)]
 }
 
 export function createPane(): PaneNode {
-  return { type: 'pane', id: generatePaneId(), color: generateRandomColor() }
+  return { type: 'pane', id: generateId('pane'), color: randomColor() }
 }
 
 export function createDefaultWorkspace(): WorkspaceState {
@@ -59,18 +41,15 @@ export function findNode(root: TilingNode, id: string): TilingNode | null {
 
 export function findParent(
   root: TilingNode,
-  paneId: string
+  nodeId: string
 ): { parent: SplitNode; childIndex: 0 | 1 } | null {
   if (root.type === 'pane') return null
   for (const idx of [0, 1] as const) {
     const child = root.children[idx]
-    if (
-      (child.type === 'pane' && child.id === paneId) ||
-      (child.type === 'split' && child.id === paneId)
-    ) {
+    if (child.id === nodeId) {
       return { parent: root, childIndex: idx }
     }
-    const result = findParent(child, paneId)
+    const result = findParent(child, nodeId)
     if (result) return result
   }
   return null
@@ -90,14 +69,13 @@ export function splitPane(
 
   function replaceNode(node: TilingNode): TilingNode | null {
     if (node.type === 'pane' && node.id === targetPaneId) {
-      const split: SplitNode = {
+      return {
         type: 'split',
-        id: generateSplitId(),
+        id: generateId('split'),
         direction,
         ratio: 0.5,
         children: [node, newPane]
       }
-      return split
     }
     if (node.type === 'split') {
       const left = replaceNode(node.children[0])
@@ -118,7 +96,6 @@ export function removePane(root: TilingNode, paneId: string): TilingNode | null 
     return root.id === paneId ? null : root
   }
 
-  // If one of the direct children is the target pane, return the other child
   if (root.children[0].type === 'pane' && root.children[0].id === paneId) {
     return root.children[1]
   }
@@ -126,10 +103,8 @@ export function removePane(root: TilingNode, paneId: string): TilingNode | null 
     return root.children[0]
   }
 
-  // Recurse into children
   const left = removePane(root.children[0], paneId)
   if (left !== root.children[0]) {
-    // Pane was found and removed in left subtree
     if (left === null) return root.children[1]
     return { ...root, children: [left, root.children[1]] }
   }
@@ -145,7 +120,7 @@ export function removePane(root: TilingNode, paneId: string): TilingNode | null 
 export function updateSplitRatio(root: TilingNode, splitId: string, newRatio: number): TilingNode {
   if (root.type === 'pane') return root
   if (root.id === splitId) {
-    return { ...root, ratio: Math.max(0.1, Math.min(0.9, newRatio)) }
+    return { ...root, ratio: Math.max(SPLIT_RATIO_MIN, Math.min(SPLIT_RATIO_MAX, newRatio)) }
   }
   return {
     ...root,
@@ -190,7 +165,6 @@ export function findPaneInDirection(
 
   const fromCx = fromRect.x + fromRect.w / 2
   const fromCy = fromRect.y + fromRect.h / 2
-  const epsilon = 0.001
 
   let bestId: string | null = null
   let bestDist = Infinity
@@ -207,22 +181,22 @@ export function findPaneInDirection(
 
     switch (direction) {
       case 'right':
-        isInDirection = rect.x >= fromRect.x + fromRect.w - epsilon
+        isInDirection = rect.x >= fromRect.x + fromRect.w - DIRECTION_EPSILON
         primaryDist = cx - fromCx
         perpDist = Math.abs(cy - fromCy)
         break
       case 'left':
-        isInDirection = rect.x + rect.w <= fromRect.x + epsilon
+        isInDirection = rect.x + rect.w <= fromRect.x + DIRECTION_EPSILON
         primaryDist = fromCx - cx
         perpDist = Math.abs(cy - fromCy)
         break
       case 'down':
-        isInDirection = rect.y >= fromRect.y + fromRect.h - epsilon
+        isInDirection = rect.y >= fromRect.y + fromRect.h - DIRECTION_EPSILON
         primaryDist = cy - fromCy
         perpDist = Math.abs(cx - fromCx)
         break
       case 'up':
-        isInDirection = rect.y + rect.h <= fromRect.y + epsilon
+        isInDirection = rect.y + rect.h <= fromRect.y + DIRECTION_EPSILON
         primaryDist = fromCy - cy
         perpDist = Math.abs(cx - fromCx)
         break
@@ -230,8 +204,7 @@ export function findPaneInDirection(
 
     if (!isInDirection) continue
 
-    // Prefer closest on perpendicular axis, then primary axis
-    const dist = perpDist * 1000 + primaryDist
+    const dist = perpDist * DIRECTION_PERP_WEIGHT + primaryDist
     if (dist < bestDist) {
       bestDist = dist
       bestId = id
@@ -241,49 +214,50 @@ export function findPaneInDirection(
   return bestId
 }
 
+function replacePaneNode(root: TilingNode, fromId: string, to: TilingNode): TilingNode {
+  if (root.type === 'pane') return root.id === fromId ? to : root
+  return {
+    ...root,
+    children: [
+      replacePaneNode(root.children[0], fromId, to),
+      replacePaneNode(root.children[1], fromId, to)
+    ]
+  }
+}
+
+function swapPanes(root: TilingNode, idA: string, idB: string): TilingNode {
+  const nodeA = findNode(root, idA)
+  const nodeB = findNode(root, idB)
+  if (!nodeA || !nodeB || nodeA.type !== 'pane' || nodeB.type !== 'pane') return root
+
+  const placeholderId = generateId('swap')
+  const placeholder: PaneNode = { type: 'pane', id: placeholderId, color: '' }
+  let tree = replacePaneNode(root, idA, placeholder)
+  tree = replacePaneNode(tree, idB, nodeA)
+  tree = replacePaneNode(tree, placeholderId, nodeB)
+  return tree
+}
+
 export function movePaneInDirection(
   root: TilingNode,
   paneId: string,
   direction: Direction
 ): TilingNode {
   const parentInfo = findParent(root, paneId)
-  if (!parentInfo) return root // pane is root, can't move
+  if (!parentInfo) return root
 
   const { parent, childIndex } = parentInfo
   const newDirection: 'horizontal' | 'vertical' =
     direction === 'left' || direction === 'right' ? 'horizontal' : 'vertical'
-  // Should focused pane be second child (right/down)?
   const focusedSecond = direction === 'right' || direction === 'down'
   const focusedIndex = focusedSecond ? 1 : 0
 
-  // If already correct direction and position, try to move further up the tree
   if (parent.direction === newDirection && childIndex === focusedIndex) {
-    // Already in the right spot in this split — try to swap with neighbor
     const targetId = findPaneInDirection(root, paneId, direction)
     if (!targetId) return root
-
-    // Swap the two panes
-    function replacePaneNode(node: TilingNode, fromId: string, to: TilingNode): TilingNode {
-      if (node.type === 'pane') return node.id === fromId ? to : node
-      return {
-        ...node,
-        children: [
-          replacePaneNode(node.children[0], fromId, to),
-          replacePaneNode(node.children[1], fromId, to)
-        ]
-      }
-    }
-    const nodeA = findNode(root, paneId)
-    const nodeB = findNode(root, targetId)
-    if (!nodeA || !nodeB || nodeA.type !== 'pane' || nodeB.type !== 'pane') return root
-    const placeholder: PaneNode = { type: 'pane', id: '__swap__', color: '' }
-    let tree = replacePaneNode(root, paneId, placeholder)
-    tree = replacePaneNode(tree, targetId, nodeA)
-    tree = replacePaneNode(tree, '__swap__', nodeB)
-    return tree
+    return swapPanes(root, paneId, targetId)
   }
 
-  // Change direction and/or reorder children
   function updateSplit(node: TilingNode): TilingNode {
     if (node.type === 'pane') return node
     if (node.id === parent.id) {

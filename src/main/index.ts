@@ -4,6 +4,7 @@ import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import { createIPCHandler } from 'electron-trpc/main'
 import { appRouter } from '../shared/router'
 import { setupPtyManager, killAllPtys } from './pty-manager'
+import { WINDOW_WIDTH, WINDOW_HEIGHT } from '../shared/constants'
 
 app.commandLine.appendSwitch('disable-gpu')
 app.commandLine.appendSwitch('no-sandbox')
@@ -11,8 +12,8 @@ import icon from '../../resources/icon.png?asset'
 
 function createWindow(): void {
   const mainWindow = new BrowserWindow({
-    width: 1200,
-    height: 800,
+    width: WINDOW_WIDTH,
+    height: WINDOW_HEIGHT,
     show: false,
     autoHideMenuBar: true,
     ...(process.platform === 'linux' ? { icon } : {}),
@@ -26,23 +27,22 @@ function createWindow(): void {
     mainWindow.show()
   })
 
-  // Log renderer console to terminal for debugging
-  mainWindow.webContents.on('console-message', (_e, _level, message) => {
-    console.log('[renderer]', message)
-  })
+  if (is.dev) {
+    mainWindow.webContents.on('console-message', (_e, _level, message) => {
+      console.log('[renderer]', message)
+    })
+  }
 
   mainWindow.webContents.setWindowOpenHandler((details) => {
     shell.openExternal(details.url)
     return { action: 'deny' }
   })
 
-  // Wire tRPC over Electron IPC
   createIPCHandler({
     router: appRouter,
     windows: [mainWindow]
   })
 
-  // HMR for renderer based on electron-vite cli.
   if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
     mainWindow.loadURL(process.env['ELECTRON_RENDERER_URL'])
   } else {
@@ -58,10 +58,9 @@ app.whenReady().then(() => {
   })
 
   setupPtyManager()
-
   createWindow()
 
-  app.on('activate', function () {
+  app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow()
   })
 })

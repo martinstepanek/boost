@@ -4,34 +4,34 @@
 
 Apple-inspired dark mode with blue accents.
 
-| Token              | Hex         | Usage                              |
-| ------------------ | ----------- | ---------------------------------- |
-| `--bg-primary`     | `#1c1c1e`   | Main background                    |
-| `--bg-secondary`   | `#2c2c2e`   | Workspace bar, elevated surfaces   |
-| `--bg-tertiary`    | `#3a3a3c`   | Hover states, subtle backgrounds   |
-| `--border`         | `#38383a`   | Borders, split dividers            |
-| `--border-focus`   | `#0a84ff`   | Focus indicator                    |
-| `--text-primary`   | `#f5f5f7`   | Primary text                       |
-| `--text-secondary` | `#98989d`   | Muted/secondary text               |
-| `--accent`         | `#0a84ff`   | Active elements, links             |
-| `--accent-hover`   | `#409cff`   | Hover on accent elements           |
+| Token              | Hex       | Usage                            |
+| ------------------ | --------- | -------------------------------- |
+| `--bg-primary`     | `#1c1c1e` | Main background                  |
+| `--bg-secondary`   | `#2c2c2e` | Workspace bar, elevated surfaces |
+| `--bg-tertiary`    | `#3a3a3c` | Hover states, subtle backgrounds |
+| `--border`         | `#38383a` | Borders, split dividers          |
+| `--border-focus`   | `#0a84ff` | Focus indicator                  |
+| `--text-primary`   | `#f5f5f7` | Primary text                     |
+| `--text-secondary` | `#98989d` | Muted/secondary text             |
+| `--accent`         | `#0a84ff` | Active elements, links           |
+| `--accent-hover`   | `#409cff` | Hover on accent elements         |
 
 ## Terminal Colors
 
-| Color          | Normal    | Bright    |
-| -------------- | --------- | --------- |
-| Black          | `#1c1c1e` | `#48484a` |
-| Red            | `#ff453a` | `#ff6961` |
-| Green          | `#30d158` | `#4cd964` |
-| Yellow         | `#ffd60a` | `#ffdc5c` |
-| Blue           | `#0a84ff` | `#409cff` |
-| Magenta        | `#bf5af2` | `#da8aff` |
-| Cyan           | `#64d2ff` | `#70d7ff` |
-| White          | `#f5f5f7` | `#ffffff` |
-| Foreground     | `#e5e5ea` |           |
-| Background     | `#1c1c1e` |           |
-| Cursor         | `#0a84ff` |           |
-| Selection      | `rgba(10, 132, 255, 0.3)` | |
+| Color      | Normal                    | Bright    |
+| ---------- | ------------------------- | --------- |
+| Black      | `#1c1c1e`                 | `#48484a` |
+| Red        | `#ff453a`                 | `#ff6961` |
+| Green      | `#30d158`                 | `#4cd964` |
+| Yellow     | `#ffd60a`                 | `#ffdc5c` |
+| Blue       | `#0a84ff`                 | `#409cff` |
+| Magenta    | `#bf5af2`                 | `#da8aff` |
+| Cyan       | `#64d2ff`                 | `#70d7ff` |
+| White      | `#f5f5f7`                 | `#ffffff` |
+| Foreground | `#e5e5ea`                 |           |
+| Background | `#1c1c1e`                 |           |
+| Cursor     | `#0a84ff`                 |           |
+| Selection  | `rgba(10, 132, 255, 0.3)` |           |
 
 ## Typography
 
@@ -57,15 +57,15 @@ Apple-inspired dark mode with blue accents.
 
 ## Spacing
 
-| Element             | Value  |
-| ------------------- | ------ |
-| Terminal padding     | `4px`  |
-| Pane focus border    | `1px`  |
-| Split divider        | `1px` visible, `7px` hit area |
-| Workspace bar height | `32px` |
-| Workspace bar padding| `0 12px` |
-| Workspace button     | `3px 10px`, radius `5px` |
-| Button gap           | `6px`  |
+| Element               | Value                         |
+| --------------------- | ----------------------------- |
+| Terminal padding      | `4px`                         |
+| Pane focus border     | `1px`                         |
+| Split divider         | `1px` visible, `7px` hit area |
+| Workspace bar height  | `32px`                        |
+| Workspace bar padding | `0 12px`                      |
+| Workspace button      | `3px 10px`, radius `5px`      |
+| Button gap            | `6px`                         |
 
 ## Component Styles
 
@@ -92,16 +92,16 @@ Apple-inspired dark mode with blue accents.
 
 All use `Alt` as modifier.
 
-| Shortcut               | Action                          |
-| ---------------------- | ------------------------------- |
-| `Alt+B`                | Split horizontal (left/right)   |
-| `Alt+V`                | Split vertical (top/bottom)     |
-| `Alt+Shift+Q`          | Close focused pane              |
-| `Alt+H/J/K/L`          | Focus left/down/up/right        |
-| `Alt+Arrows`           | Focus left/down/up/right        |
-| `Alt+Shift+H/J/K/L`   | Move pane in direction          |
-| `Alt+Shift+Arrows`     | Move pane in direction          |
-| `Alt+1-9`              | Switch to workspace             |
-| `Alt+Shift+1-9`        | Move pane to workspace          |
-| `Ctrl+C` (w/ selection)| Copy to clipboard               |
-| `Ctrl+V`               | Paste from clipboard            |
+| Shortcut                | Action                        |
+| ----------------------- | ----------------------------- |
+| `Alt+B`                 | Split horizontal (left/right) |
+| `Alt+V`                 | Split vertical (top/bottom)   |
+| `Alt+Shift+Q`           | Close focused pane            |
+| `Alt+H/J/K/L`           | Focus left/down/up/right      |
+| `Alt+Arrows`            | Focus left/down/up/right      |
+| `Alt+Shift+H/J/K/L`     | Move pane in direction        |
+| `Alt+Shift+Arrows`      | Move pane in direction        |
+| `Alt+1-9`               | Switch to workspace           |
+| `Alt+Shift+1-9`         | Move pane to workspace        |
+| `Ctrl+C` (w/ selection) | Copy to clipboard             |
+| `Ctrl+V`                | Paste from clipboard          |

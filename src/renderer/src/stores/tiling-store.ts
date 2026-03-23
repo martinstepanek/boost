@@ -11,7 +11,7 @@ import {
   splitPane,
   updateSplitRatio
 } from '../lib/tiling-tree'
-import { destroyTerminal } from '../components/layout/TerminalPane'
+import { destroyTerminal } from '../lib/pty-registry'
 
 interface TilingStore {
   activeWorkspace: number
@@ -28,6 +28,45 @@ interface TilingStore {
   moveFocusedPaneToWorkspace(n: number): void
   resizeSplit(splitId: string, newRatio: number): void
   getPersistedState(): PersistedState
+}
+
+function replacePaneInTree(
+  root: TilingNode,
+  targetId: string,
+  replacement: TilingNode
+): TilingNode {
+  if (root.type === 'pane') {
+    return root.id === targetId ? replacement : root
+  }
+  return {
+    ...root,
+    children: [
+      replacePaneInTree(root.children[0], targetId, replacement),
+      replacePaneInTree(root.children[1], targetId, replacement)
+    ]
+  }
+}
+
+function getWorkspace(
+  workspaces: Record<number, WorkspaceState>,
+  n: number
+): WorkspaceState | undefined {
+  return workspaces[n]
+}
+
+function updateWorkspace(
+  workspaces: Record<number, WorkspaceState>,
+  n: number,
+  ws: WorkspaceState
+): Record<number, WorkspaceState> {
+  return { ...workspaces, [n]: ws }
+}
+
+function getLowestWorkspaceKey(workspaces: Record<number, WorkspaceState>): number | undefined {
+  const keys = Object.keys(workspaces)
+    .map(Number)
+    .sort((a, b) => a - b)
+  return keys[0]
 }
 
 export const useTilingStore = create<TilingStore>()(
@@ -54,114 +93,94 @@ export const useTilingStore = create<TilingStore>()(
 
     splitFocusedPane(direction): void {
       const { activeWorkspace, workspaces } = get()
-      const ws = workspaces[activeWorkspace]
+      const ws = getWorkspace(workspaces, activeWorkspace)
       if (!ws) return
 
       const result = splitPane(ws.layout, ws.focusedPaneId, direction)
       if (!result) return
 
       set({
-        workspaces: {
-          ...workspaces,
-          [activeWorkspace]: {
-            layout: result.newRoot,
-            focusedPaneId: result.newPaneId
-          }
-        }
+        workspaces: updateWorkspace(workspaces, activeWorkspace, {
+          layout: result.newRoot,
+          focusedPaneId: result.newPaneId
+        })
       })
     },
 
     closeFocusedPane(): void {
       const { activeWorkspace, workspaces } = get()
-      const ws = workspaces[activeWorkspace]
+      const ws = getWorkspace(workspaces, activeWorkspace)
       if (!ws) return
 
       const closedPaneId = ws.focusedPaneId
       const newRoot = removePane(ws.layout, closedPaneId)
 
-      // Clean up terminal and PTY
       destroyTerminal(closedPaneId)
 
       if (newRoot === null) {
-        // Last pane in workspace — delete it
         const remaining = { ...workspaces }
         delete remaining[activeWorkspace]
 
-        const keys = Object.keys(remaining)
-          .map(Number)
-          .sort((a, b) => a - b)
-        if (keys.length === 0) {
-          // No workspaces left — create workspace 1
+        const nextKey = getLowestWorkspaceKey(remaining)
+        if (nextKey === undefined) {
           set({
             activeWorkspace: 1,
             workspaces: { 1: createDefaultWorkspace() }
           })
         } else {
-          set({
-            activeWorkspace: keys[0],
-            workspaces: remaining
-          })
+          set({ activeWorkspace: nextKey, workspaces: remaining })
         }
         return
       }
 
-      // Find a new pane to focus
       const paneIds = getAllPaneIds(newRoot)
-      const newFocused = paneIds[0] || ws.focusedPaneId
-
       set({
-        workspaces: {
-          ...workspaces,
-          [activeWorkspace]: {
-            layout: newRoot,
-            focusedPaneId: newFocused
-          }
-        }
+        workspaces: updateWorkspace(workspaces, activeWorkspace, {
+          layout: newRoot,
+          focusedPaneId: paneIds[0]
+        })
       })
     },
 
     swapFocusedPane(direction): void {
       const { activeWorkspace, workspaces } = get()
-      const ws = workspaces[activeWorkspace]
+      const ws = getWorkspace(workspaces, activeWorkspace)
       if (!ws) return
 
       const newLayout = movePaneInDirection(ws.layout, ws.focusedPaneId, direction)
       if (newLayout === ws.layout) return
 
       set({
-        workspaces: {
-          ...workspaces,
-          [activeWorkspace]: { ...ws, layout: newLayout }
-        }
+        workspaces: updateWorkspace(workspaces, activeWorkspace, { ...ws, layout: newLayout })
       })
     },
 
     moveFocus(direction): void {
       const { activeWorkspace, workspaces } = get()
-      const ws = workspaces[activeWorkspace]
+      const ws = getWorkspace(workspaces, activeWorkspace)
       if (!ws) return
 
       const targetId = findPaneInDirection(ws.layout, ws.focusedPaneId, direction)
       if (!targetId) return
 
       set({
-        workspaces: {
-          ...workspaces,
-          [activeWorkspace]: { ...ws, focusedPaneId: targetId }
-        }
+        workspaces: updateWorkspace(workspaces, activeWorkspace, {
+          ...ws,
+          focusedPaneId: targetId
+        })
       })
     },
 
     setFocusedPane(paneId): void {
       const { activeWorkspace, workspaces } = get()
-      const ws = workspaces[activeWorkspace]
+      const ws = getWorkspace(workspaces, activeWorkspace)
       if (!ws) return
 
       set({
-        workspaces: {
-          ...workspaces,
-          [activeWorkspace]: { ...ws, focusedPaneId: paneId }
-        }
+        workspaces: updateWorkspace(workspaces, activeWorkspace, {
+          ...ws,
+          focusedPaneId: paneId
+        })
       })
     },
 
@@ -180,7 +199,7 @@ export const useTilingStore = create<TilingStore>()(
     moveFocusedPaneToWorkspace(n): void {
       const { activeWorkspace, workspaces } = get()
       if (n === activeWorkspace) return
-      const ws = workspaces[activeWorkspace]
+      const ws = getWorkspace(workspaces, activeWorkspace)
       if (!ws) return
 
       const extracted = extractPane(ws.layout, ws.focusedPaneId)
@@ -188,63 +207,41 @@ export const useTilingStore = create<TilingStore>()(
 
       const { pane, newRoot } = extracted
 
-      // Update target workspace
       const targetWs = workspaces[n]
       let newTargetLayout: TilingNode
       if (targetWs) {
-        // Add pane to existing workspace by splitting the focused pane there
         const result = splitPane(targetWs.layout, targetWs.focusedPaneId, 'horizontal')
-        if (result) {
-          // Replace the new auto-created pane with our moved pane
-          newTargetLayout = replacePaneInTree(result.newRoot, result.newPaneId, pane)
-        } else {
-          newTargetLayout = targetWs.layout
-        }
+        newTargetLayout = result
+          ? replacePaneInTree(result.newRoot, result.newPaneId, pane)
+          : targetWs.layout
       } else {
         newTargetLayout = pane
       }
 
       const newWorkspaces = { ...workspaces }
+      newWorkspaces[n] = { layout: newTargetLayout, focusedPaneId: pane.id }
 
-      // Update target
-      newWorkspaces[n] = {
-        layout: newTargetLayout,
-        focusedPaneId: pane.id
-      }
-
-      // Update source
       if (newRoot === null) {
         delete newWorkspaces[activeWorkspace]
-        const keys = Object.keys(newWorkspaces)
-          .map(Number)
-          .sort((a, b) => a - b)
-        set({
-          activeWorkspace: keys[0] || 1,
-          workspaces: newWorkspaces
-        })
+        const nextKey = getLowestWorkspaceKey(newWorkspaces)
+        set({ activeWorkspace: nextKey ?? 1, workspaces: newWorkspaces })
       } else {
         const paneIds = getAllPaneIds(newRoot)
-        newWorkspaces[activeWorkspace] = {
-          layout: newRoot,
-          focusedPaneId: paneIds[0] || ''
-        }
+        newWorkspaces[activeWorkspace] = { layout: newRoot, focusedPaneId: paneIds[0] }
         set({ workspaces: newWorkspaces })
       }
     },
 
     resizeSplit(splitId, newRatio): void {
       const { activeWorkspace, workspaces } = get()
-      const ws = workspaces[activeWorkspace]
+      const ws = getWorkspace(workspaces, activeWorkspace)
       if (!ws) return
 
       set({
-        workspaces: {
-          ...workspaces,
-          [activeWorkspace]: {
-            ...ws,
-            layout: updateSplitRatio(ws.layout, splitId, newRatio)
-          }
-        }
+        workspaces: updateWorkspace(workspaces, activeWorkspace, {
+          ...ws,
+          layout: updateSplitRatio(ws.layout, splitId, newRatio)
+        })
       })
     },
 
@@ -254,20 +251,3 @@ export const useTilingStore = create<TilingStore>()(
     }
   }))
 )
-
-function replacePaneInTree(
-  root: TilingNode,
-  targetId: string,
-  replacement: TilingNode
-): TilingNode {
-  if (root.type === 'pane') {
-    return root.id === targetId ? replacement : root
-  }
-  return {
-    ...root,
-    children: [
-      replacePaneInTree(root.children[0], targetId, replacement),
-      replacePaneInTree(root.children[1], targetId, replacement)
-    ]
-  }
-}
