@@ -11,7 +11,8 @@ Boost is a tiling terminal emulator (Electron + React + TypeScript) with i3-styl
 - **tRPC** over Electron IPC for type-safe communication
 - **Zustand** for state management
 - **Tailwind CSS v4** with `@tailwindcss/vite` plugin
-- **shadcn/ui** for UI components
+- **shadcn/ui** for UI components (Button, Input, Command)
+- **cmdk** for command palette
 - **electron-vite** for build tooling
 - **yarn** as package manager (not npm)
 
@@ -31,24 +32,37 @@ See [docs/design-system.md](docs/design-system.md) for the full specification:
 - JetBrains Mono for terminal, system font for UI
 - CSS variables: `--bg-primary`, `--bg-secondary`, `--accent`, `--border`, etc.
 
+## Architecture
+
+- **Backend targets**: `src/main/targets/` — LocalTarget, WslTarget, PowershellTarget
+- **App registry**: `src/shared/app-registry.ts` — extensible app definitions (Terminal, Claude Code)
+- **Tiling tree**: `src/renderer/src/lib/tiling-tree.ts` — pure functions, i3-style binary splits
+- **PTY registry**: `src/renderer/src/lib/pty-registry.ts` — tracks active PTYs and fit addons
+- **Pane rect store**: `src/renderer/src/lib/pane-rect-store.ts` — tracks pane DOM positions
+- **Store**: `src/renderer/src/stores/tiling-store.ts` — single Zustand store for all state
+- **Constants**: `src/shared/constants.ts` — all hardcoded values
+- **Types**: `src/shared/types.ts` — PaneNode, SplitNode, WorkspaceState, etc.
+
 ## Code Conventions
 
 - All hardcoded values (colors, sizes, timing) go in `src/shared/constants.ts`
-- Shared types in `src/shared/types.ts`
-- Tiling tree logic (pure functions) in `src/renderer/src/lib/tiling-tree.ts`
-- PTY tracking in `src/renderer/src/lib/pty-registry.ts`
-- Single Zustand store in `src/renderer/src/stores/tiling-store.ts`
+- New apps → add to `src/shared/app-registry.ts` (extensible array pattern)
+- New backend targets → implement `BackendTarget` interface in `src/main/targets/`
+- i3-style tiling: per-pane split direction, 50/50 splits, no rebalancing
 
 ## Keybindings
 
 All use `Alt` as modifier. Hardcoded in `src/renderer/src/hooks/use-keybindings.ts`.
 Use `e.code` (not `e.key`) for keyboard handling — it's layout-independent.
+Key bindings: Alt+B/V (split direction), Alt+Enter (new pane), Alt+D (command palette),
+Alt+H/J/K/L (focus), Alt+Shift+H/J/K/L (move), Alt+1-9 (workspace), Alt+Shift+Q (close).
 
 ## Node Version
 
 Requires Node.js 22+ (pinned via `.nvmrc`). Use `nvm use` before running commands.
 
 ## Git
+
 - Do NOT push tags unless explicitly asked. Tags trigger CI builds.
 - Push to main is fine for regular commits.
 

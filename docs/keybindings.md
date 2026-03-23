@@ -1,6 +1,6 @@
 # Keybindings
 
-All keybindings use `Alt` as the modifier key. Keybindings are currently hardcoded (configurable keybindings planned for a future release).
+All keybindings use `Alt` as the modifier key. Keybindings are currently hardcoded in `src/renderer/src/hooks/use-keybindings.ts` using `e.code` for layout independence.
 
 ## Implemented Keybindings
 
@@ -11,13 +11,21 @@ All keybindings use `Alt` as the modifier key. Keybindings are currently hardcod
 | `Alt+1` through `Alt+9`             | Switch to workspace 1–9            |
 | `Alt+Shift+1` through `Alt+Shift+9` | Move focused pane to workspace 1–9 |
 
+### Pane Split Direction (per-pane, i3-style)
+
+| Keybinding | Action                                           |
+| ---------- | ------------------------------------------------ |
+| `Alt+B`    | Set focused pane's next split to horizontal (←→) |
+| `Alt+V`    | Set focused pane's next split to vertical (↑↓)   |
+
+Each pane remembers its own split direction. Alt+B/V only affects the focused pane.
+
 ### Pane Creation & Destruction
 
-| Keybinding    | Action                                       |
-| ------------- | -------------------------------------------- |
-| `Alt+V`       | Split focused pane vertically (top/bottom)   |
-| `Alt+B`       | Split focused pane horizontally (left/right) |
-| `Alt+Shift+Q` | Close focused pane                           |
+| Keybinding    | Action                                                 |
+| ------------- | ------------------------------------------------------ |
+| `Alt+Enter`   | Open new terminal using focused pane's split direction |
+| `Alt+Shift+Q` | Close focused pane                                     |
 
 ### Focus Navigation
 
@@ -39,7 +47,16 @@ All keybindings use `Alt` as the modifier key. Keybindings are currently hardcod
 | `Alt+Shift+L`     | Move/swap pane right        |
 | `Alt+Shift+Arrow` | Move/swap pane in direction |
 
-Move changes the parent split's direction to match the movement axis and repositions the pane. If already in the correct position, it swaps with the neighbor.
+Move changes the parent split's direction to match the movement axis. If already in position, swaps with neighbor.
+
+### Command Palette
+
+| Keybinding | Action                |
+| ---------- | --------------------- |
+| `Alt+D`    | Open command palette  |
+| `Escape`   | Close command palette |
+
+The command palette lists available apps (Terminal, Claude Code). Select one to open it in a new pane.
 
 ### Terminal
 
@@ -51,20 +68,17 @@ Move changes the parent split's direction to match the movement axis and reposit
 
 ### Resize
 
-Split dividers can be dragged with the mouse to resize panes.
+Split dividers can be dragged with the mouse.
 
 ## Key Handling Architecture
 
-### Keybinding Priority
+1. `Alt` key events are intercepted at the capture phase (`window.addEventListener('keydown', handler, true)`)
+2. `e.preventDefault()` on all Alt events prevents Electron menu bar activation
+3. xterm.js blocks all `Alt+key` via `attachCustomKeyEventHandler` — they never reach the terminal
+4. Non-Alt keypresses pass through to the focused terminal
 
-1. App-level keybindings (`Alt+*` combinations) are captured first via a `keydown` listener on the capture phase
-2. xterm.js blocks all `Alt+key` events from reaching the terminal via `attachCustomKeyEventHandler`
-3. If no app keybinding matches, the keypress is forwarded to the focused terminal
+## Planned
 
-This means `Alt+H` is captured by the app (focus left), but plain `H` goes to the terminal.
-
-## Planned Features
-
-- Configurable keybindings via JSON config file
+- Configurable keybindings via JSON config
 - Resize mode (`Alt+R` + `H/J/K/L`)
 - Fullscreen toggle (`Alt+F`)

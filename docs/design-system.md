@@ -60,12 +60,31 @@ Apple-inspired dark mode with blue accents.
 | Element               | Value                         |
 | --------------------- | ----------------------------- |
 | Terminal padding      | `4px`                         |
-| Pane focus border     | `1px`                         |
 | Split divider         | `1px` visible, `7px` hit area |
 | Workspace bar height  | `32px`                        |
 | Workspace bar padding | `0 12px`                      |
 | Workspace button      | `3px 10px`, radius `5px`      |
 | Button gap            | `6px`                         |
+
+## UI Components (shadcn/ui)
+
+All UI components use shadcn/ui. Components live in `src/renderer/src/components/ui/`.
+
+### Button
+
+Variants: `default`, `secondary`, `ghost`, `workspace`, `workspaceActive`
+Sizes: `default` (h-8), `sm` (h-7), `icon` (h-8 w-8)
+
+### Input
+
+Styled with CSS variables, mono font for path inputs.
+
+### Command (Command Palette)
+
+- Backdrop: `rgba(0, 0, 0, 0.5)`
+- Container: `480px` wide, rounded-lg, border
+- Items: hover highlight with `--bg-tertiary`
+- Input: transparent background, placeholder in `--text-secondary`
 
 ## Component Styles
 
@@ -75,33 +94,27 @@ Apple-inspired dark mode with blue accents.
 - Top border: `1px solid --border`
 - Active button: `rgba(10, 132, 255, 0.15)` fill, `--accent` text
 - Inactive button: transparent, `--text-secondary` text
-- Hover: `--bg-tertiary` fill, `--text-primary` text
+- Shows folder name from workspace cwd
+- Shows focused pane's split direction indicator (⬌ or ⬍)
 
 ### Split Divider
 
 - Visual: `1px` line in `--border` color
 - Hit area: `7px` total (3px transparent border each side)
-- Cursor: `col-resize` (horizontal) / `row-resize` (vertical)
+- Cursor: `col-resize` / `row-resize`
 
 ### Pane Focus
 
-- Focused: `1px solid --border-focus`
-- Unfocused: `1px solid transparent`
+- Absolute overlay div with `z-index: 10` and `pointer-events: none`
+- `1px solid --border-focus` when focused
+
+### Workspace Setup
+
+- Centered path input with homedir prefix
+- Target selector tabs (shown only when multiple targets available)
+- Tab autocomplete for directory names
+- Browse button for native folder picker
 
 ## Keybindings
 
-All use `Alt` as modifier.
-
-| Shortcut                | Action                        |
-| ----------------------- | ----------------------------- |
-| `Alt+B`                 | Split horizontal (left/right) |
-| `Alt+V`                 | Split vertical (top/bottom)   |
-| `Alt+Shift+Q`           | Close focused pane            |
-| `Alt+H/J/K/L`           | Focus left/down/up/right      |
-| `Alt+Arrows`            | Focus left/down/up/right      |
-| `Alt+Shift+H/J/K/L`     | Move pane in direction        |
-| `Alt+Shift+Arrows`      | Move pane in direction        |
-| `Alt+1-9`               | Switch to workspace           |
-| `Alt+Shift+1-9`         | Move pane to workspace        |
-| `Ctrl+C` (w/ selection) | Copy to clipboard             |
-| `Ctrl+V`                | Paste from clipboard          |
+All use `Alt` as modifier. See [keybindings.md](keybindings.md) for full reference.

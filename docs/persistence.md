@@ -1,107 +1,102 @@
 # Persistence
 
-The app persists its state so that closing and reopening the app restores the exact layout, workspaces, and terminal positions the user left.
-
 ## What Is Persisted
 
-| Data                        | Persisted? | Notes                                        |
-| --------------------------- | ---------- | -------------------------------------------- |
-| Which workspaces exist      | Yes        | e.g., workspaces 1, 3, 5 are active          |
-| Active workspace            | Yes        | Which workspace was visible on close         |
-| Tiling layout per workspace | Yes        | Full binary tree structure with split ratios |
-| Pane positions and sizes    | Yes        | Derived from the tree + split ratios         |
-| Terminal working directory  | Yes        | `cwd` of each terminal at save time          |
-| Terminal scrollback/history | No         | Too large; terminals start fresh             |
-| Running processes           | No         | Processes are re-launched from saved `cwd`   |
-| Backend target per pane     | Yes        | Target ID (e.g., `wsl:Ubuntu`, `local`)      |
+| Data                   | Persisted | Notes                                         |
+| ---------------------- | --------- | --------------------------------------------- |
+| Which workspaces exist | Yes       | e.g., workspaces 1, 3, 5 are active           |
+| Active workspace       | Yes       | Which workspace was visible on close          |
+| Tiling layout          | Yes       | Full binary tree with split ratios            |
+| Pane app type + params | Yes       | `app: "terminal"` or `app: "claude"` + params |
+| Pane split direction   | Yes       | Per-pane i3-style split direction             |
+| Workspace cwd          | Yes       | Working directory per workspace               |
+| Workspace target       | Yes       | Backend target ID (local, wsl:Ubuntu, etc.)   |
+| Claude session ID      | Yes       | In pane params for session resume             |
+| Terminal scrollback    | No        | Too large; terminals start fresh              |
+| Running processes      | No        | Processes re-launch from saved state          |
 
-## How It Works
+## Save Triggers
 
-### Save Triggers
+1. **On state change** — debounced 1 second after any layout/workspace change
+2. **Periodic autosave** — every 60 seconds as a safety net
+3. **On app close** — immediate save via `beforeunload`
 
-State is saved automatically on:
+## Storage
 
-- **App close** - `before-quit` event in Electron main process
-- **Layout change** - After any split, close, resize, or workspace switch (debounced, ~1s delay)
-- **Periodic autosave** - Every 60 seconds as a safety net
+- **Path:** `{app.getPath('userData')}/tiling-state.json` (e.g., `~/.config/boost/tiling-state.json`)
+- **Format:** JSON, pretty-printed
 
-### Storage Format
-
-State is saved as JSON to the Electron `userData` directory:
-
-```
-%APPDATA%/tileterm/state.json
-```
-
-### State Schema
+## State Schema
 
 ```json
 {
-  "version": 2,
-  "defaultTarget": "wsl:Ubuntu",
+  "version": 1,
   "activeWorkspace": 1,
   "workspaces": {
     "1": {
       "layout": {
         "type": "split",
+        "id": "split-abc123",
         "direction": "horizontal",
         "ratio": 0.5,
         "children": [
           {
             "type": "pane",
-            "id": "pane-abc123",
-            "terminal": {
-              "cwd": "/home/stepanek/project",
-              "target": "wsl:Ubuntu"
-            }
+            "id": "pane-def456",
+            "color": "#1e3a5f",
+            "app": "terminal",
+            "params": {},
+            "splitDirection": "horizontal"
           },
           {
             "type": "pane",
-            "id": "pane-def456",
-            "terminal": {
-              "cwd": "/home/stepanek",
-              "target": "wsl:Ubuntu"
-            }
+            "id": "pane-ghi789",
+            "color": "#3b1f2b",
+            "app": "claude",
+            "params": { "sessionId": "b5977b9c-..." },
+            "splitDirection": "vertical"
           }
         ]
       },
-      "focusedPaneId": "pane-abc123"
-    },
-    "3": {
-      "layout": {
-        "type": "pane",
-        "id": "pane-ghi789",
-        "terminal": {
-          "cwd": "/home/stepanek/other-project",
-          "target": "wsl:Ubuntu"
-        }
-      },
-      "focusedPaneId": "pane-ghi789"
+      "focusedPaneId": "pane-def456",
+      "cwd": "/home/user/project",
+      "targetId": "wsl:Ubuntu"
     }
   }
 }
 ```
 
-Note: The `target` field stores the BackendTarget ID. On restore, the app resolves this ID to a target instance via `TargetResolver`. If the target is unavailable (e.g., WSL distro was removed), the pane falls back to the `defaultTarget` or shows an error.
+### PaneNode Fields
 
-### Restore on Startup
+| Field            | Type                         | Description                               |
+| ---------------- | ---------------------------- | ----------------------------------------- |
+| `type`           | `"pane"`                     | Node type discriminator                   |
+| `id`             | `string`                     | Unique pane ID (crypto UUID prefix)       |
+| `color`          | `string`                     | Hex color for visual identification       |
+| `app`            | `string`                     | App registry ID: `"terminal"`, `"claude"` |
+| `params`         | `Record<string, unknown>`    | App-specific data (e.g., `sessionId`)     |
+| `splitDirection` | `"horizontal" \| "vertical"` | Next split direction for this pane (i3)   |
 
-When the app launches:
+### WorkspaceState Fields
 
-1. Read `state.json` from disk
-2. Reconstruct workspace and layout trees in the Zustand store
-3. For each pane, resolve the saved `target` ID to a BackendTarget, then spawn a PTY with the saved `cwd`
-4. Render the active workspace
-5. Restore focus to the previously focused pane
+| Field           | Type                 | Description                         |
+| --------------- | -------------------- | ----------------------------------- |
+| `layout`        | `TilingNode \| null` | Tiling tree (null = no terminals)   |
+| `focusedPaneId` | `string`             | Focused pane in this workspace      |
+| `cwd`           | `string`             | Working directory                   |
+| `targetId`      | `string`             | Backend target (local, wsl:X, etc.) |
 
-If `state.json` is missing or corrupt, the app starts with a single workspace containing one terminal pane (default state).
+## Restore on Startup
 
-### Terminal Session Restoration
+1. Read `tiling-state.json` from disk
+2. Validate version field and workspace structure
+3. Apply defaults for missing fields (backward compatibility)
+4. Populate Zustand store
+5. Render active workspace
+6. For each pane, spawn PTY (shell or command based on `app` field)
+7. For Claude panes with `params.sessionId`, resume session
+8. If state missing or corrupt, start with empty workspace 1
 
-Terminal sessions cannot be fully restored (running processes, scrollback). Instead:
+## Backward Compatibility
 
-- A new shell is spawned in the same working directory
-- The user sees a fresh shell prompt at the correct location
-- Any previously running processes (e.g., a dev server) need to be manually restarted
-
-This matches the behavior of most terminal apps (e.g., Windows Terminal, iTerm2 session restore).
+The Zod schema uses `.optional().default('')` for newer fields (`cwd`, `targetId`). The store's `initialize` function fills in defaults for any missing workspace fields, so old state files load without errors.
