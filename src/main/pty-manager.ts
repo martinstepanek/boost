@@ -60,7 +60,11 @@ export function setupPtyManager(): void {
     const target = getTarget(targetId || getDefaultTargetId())
     if (!target) return -1
 
-    const config = target.spawn(target.getDefaultShell(), target.getDefaultShellArgs(), cwd || homedir())
+    const config = target.spawn(
+      target.getDefaultShell(),
+      target.getDefaultShellArgs(),
+      cwd || homedir()
+    )
     return spawnPty(paneId, config.command, config.args, config.cwd || '', config.env)
   })
 

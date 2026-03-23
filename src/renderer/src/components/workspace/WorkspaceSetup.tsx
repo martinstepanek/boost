@@ -105,11 +105,15 @@ export default function WorkspaceSetup({
     e.preventDefault()
     const homedirPrefix = `${homedir}${sep}`
     const fullPath = inputValue.trim()
-      ? isAbsolute(inputValue) ? inputValue.trim() : `${homedir}${sep}${inputValue.trim()}`
+      ? isAbsolute(inputValue)
+        ? inputValue.trim()
+        : `${homedir}${sep}${inputValue.trim()}`
       : homedir
     if (fullPath) {
       setWorkspaceCwd(fullPath)
-      setInputValue(fullPath.startsWith(homedirPrefix) ? fullPath.slice(homedirPrefix.length) : fullPath)
+      setInputValue(
+        fullPath.startsWith(homedirPrefix) ? fullPath.slice(homedirPrefix.length) : fullPath
+      )
     }
   }
 
@@ -158,7 +162,8 @@ export default function WorkspaceSetup({
       <form onSubmit={handleSubmit} className="flex items-center gap-2">
         <div className="flex items-stretch rounded-md border border-[var(--border)] overflow-hidden focus-within:border-[var(--border-focus)]">
           <span className="flex items-center px-3 text-sm text-[var(--text-secondary)] bg-[var(--bg-tertiary)] font-[family-name:var(--font-mono)] select-none whitespace-nowrap">
-            {homedir || '~'}{homedir.includes('\\') ? '\\' : '/'}
+            {homedir || '~'}
+            {homedir.includes('\\') ? '\\' : '/'}
           </span>
           <input
             ref={inputRef}

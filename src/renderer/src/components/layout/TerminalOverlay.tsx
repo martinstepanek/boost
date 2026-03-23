@@ -75,7 +75,7 @@ export default function TerminalOverlay(): React.JSX.Element {
               top: rect?.y ?? 0,
               width: rect?.w ?? 0,
               height: rect?.h ?? 0,
-              display: isVisible ? 'flex' : 'none',
+              display: isVisible ? 'flex' : 'none'
             }}
           >
             {isFocused && (
