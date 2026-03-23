@@ -71,10 +71,10 @@ export default function TerminalOverlay(): React.JSX.Element {
             key={id}
             style={{
               position: 'fixed',
-              left: rect?.x ?? 0,
-              top: rect?.y ?? 0,
-              width: rect?.w ?? 0,
-              height: rect?.h ?? 0,
+              left: Math.round(rect?.x ?? 0),
+              top: Math.round(rect?.y ?? 0),
+              width: Math.round(rect?.w ?? 0),
+              height: Math.round(rect?.h ?? 0),
               display: isVisible ? 'flex' : 'none'
             }}
           >

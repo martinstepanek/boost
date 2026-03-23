@@ -18,7 +18,12 @@ export default function Pane({ pane, isVisible }: PaneProps): React.JSX.Element 
 
     const update = (): void => {
       const rect = el.getBoundingClientRect()
-      paneRectStore.set(pane.id, { x: rect.left, y: rect.top, w: rect.width, h: rect.height })
+      paneRectStore.set(pane.id, {
+        x: Math.round(rect.left),
+        y: Math.round(rect.top),
+        w: Math.round(rect.width),
+        h: Math.round(rect.height)
+      })
       paneRectStore.notify()
     }
 

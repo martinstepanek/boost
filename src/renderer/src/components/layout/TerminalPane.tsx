@@ -60,6 +60,7 @@ export default function TerminalPane({
 }: TerminalPaneProps): React.JSX.Element {
   const containerRef = useRef<HTMLDivElement>(null)
   const terminalRef = useRef<Terminal | null>(null)
+  const lastSizeRef = useRef({ cols: 0, rows: 0 })
 
   // Create terminal and PTY
   useEffect(() => {
@@ -132,6 +133,7 @@ export default function TerminalPane({
       if (disposed) return
       ptyReady = true
       fitAddon.fit()
+      lastSizeRef.current = { cols: terminal.cols, rows: terminal.rows }
       window.pty.resize(paneId, terminal.cols, terminal.rows)
 
       // Poll for claude session ID if this is a new claude pane (no sessionId yet)
@@ -153,7 +155,11 @@ export default function TerminalPane({
         try {
           fitAddon.fit()
           if (ptyReady && isPtyActive(paneId)) {
-            window.pty.resize(paneId, terminal.cols, terminal.rows)
+            const { cols, rows } = lastSizeRef.current
+            if (terminal.cols !== cols || terminal.rows !== rows) {
+              lastSizeRef.current = { cols: terminal.cols, rows: terminal.rows }
+              window.pty.resize(paneId, terminal.cols, terminal.rows)
+            }
           }
         } catch {
           // Expected during teardown
@@ -180,11 +186,13 @@ export default function TerminalPane({
     if (!isVisible) return
     const timer = setTimeout(() => {
       const addon = getFitAddon(paneId)
-      if (addon && isPtyActive(paneId)) {
+      const term = terminalRef.current
+      if (addon && term && isPtyActive(paneId)) {
         try {
           addon.fit()
-          const term = terminalRef.current
-          if (term) {
+          const { cols, rows } = lastSizeRef.current
+          if (term.cols !== cols || term.rows !== rows) {
+            lastSizeRef.current = { cols: term.cols, rows: term.rows }
             window.pty.resize(paneId, term.cols, term.rows)
           }
         } catch {
