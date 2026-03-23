@@ -8,14 +8,16 @@ process.once('loaded', () => {
 })
 
 const ptyAPI = {
-  create: (paneId: string, cwd?: string): Promise<number> =>
-    ipcRenderer.invoke('pty:create', paneId, cwd),
+  create: (paneId: string, targetId?: string, cwd?: string): Promise<number> =>
+    ipcRenderer.invoke('pty:create', paneId, targetId, cwd),
   createWithCommand: (
     paneId: string,
     command: string,
     args: string[],
+    targetId?: string,
     cwd?: string
-  ): Promise<number> => ipcRenderer.invoke('pty:createWithCommand', paneId, command, args, cwd),
+  ): Promise<number> =>
+    ipcRenderer.invoke('pty:createWithCommand', paneId, command, args, targetId, cwd),
   getClaudeSession: (pid: number): Promise<string | null> =>
     ipcRenderer.invoke('pty:getClaudeSession', pid),
   write: (paneId: string, data: string): void => {
@@ -43,8 +45,16 @@ const ptyAPI = {
 
 const dialogAPI = {
   openFolder: (): Promise<string | null> => ipcRenderer.invoke('dialog:openFolder'),
-  getHomedir: (): Promise<string> => ipcRenderer.invoke('dialog:getHomedir'),
-  listDir: (dirPath: string): Promise<string[]> => ipcRenderer.invoke('dialog:listDir', dirPath)
+  getHomedir: (targetId?: string): Promise<string> =>
+    ipcRenderer.invoke('dialog:getHomedir', targetId),
+  listDir: (dirPath: string, targetId?: string): Promise<string[]> =>
+    ipcRenderer.invoke('dialog:listDir', dirPath, targetId)
+}
+
+const targetsAPI = {
+  getAvailable: (): Promise<Array<{ id: string; label: string }>> =>
+    ipcRenderer.invoke('targets:getAvailable'),
+  getDefaultId: (): Promise<string> => ipcRenderer.invoke('targets:getDefaultId')
 }
 
 // Expose standard Electron APIs
@@ -53,6 +63,7 @@ if (process.contextIsolated) {
     contextBridge.exposeInMainWorld('electron', electronAPI)
     contextBridge.exposeInMainWorld('pty', ptyAPI)
     contextBridge.exposeInMainWorld('dialog', dialogAPI)
+    contextBridge.exposeInMainWorld('targets', targetsAPI)
   } catch (error) {
     console.error(error)
   }
@@ -63,4 +74,6 @@ if (process.contextIsolated) {
   window.pty = ptyAPI
   // @ts-ignore (define in dts)
   window.dialog = dialogAPI
+  // @ts-ignore (define in dts)
+  window.targets = targetsAPI
 }

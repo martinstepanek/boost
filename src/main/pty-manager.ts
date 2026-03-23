@@ -4,12 +4,9 @@ import { homedir } from 'os'
 import { join } from 'path'
 import { readFile } from 'fs/promises'
 import { PTY_INITIAL_COLS, PTY_INITIAL_ROWS, PTY_TERM_NAME } from '../shared/constants'
+import { getTarget, getDefaultTargetId } from './targets/target-resolver'
 
 const ptys = new Map<string, IPty>()
-
-function getDefaultShell(): string {
-  return process.env.SHELL || '/bin/bash'
-}
 
 function getMainWindow(): BrowserWindow | null {
   const win = BrowserWindow.getAllWindows()[0]
@@ -24,13 +21,19 @@ function killExisting(paneId: string): void {
   }
 }
 
-function spawnAndRegister(paneId: string, command: string, args: string[], cwd: string): number {
+function spawnPty(
+  paneId: string,
+  command: string,
+  args: string[],
+  cwd: string,
+  env?: Record<string, string>
+): number {
   const pty = spawn(command, args, {
     name: PTY_TERM_NAME,
     cols: PTY_INITIAL_COLS,
     rows: PTY_INITIAL_ROWS,
-    cwd,
-    env: process.env as Record<string, string>
+    cwd: cwd || homedir(),
+    env: env || (process.env as Record<string, string>)
   })
 
   ptys.set(paneId, pty)
@@ -51,16 +54,35 @@ function spawnAndRegister(paneId: string, command: string, args: string[], cwd: 
 }
 
 export function setupPtyManager(): void {
-  ipcMain.handle('pty:create', (_event, paneId: string, cwd?: string) => {
+  // Create shell via target
+  ipcMain.handle('pty:create', (_event, paneId: string, targetId?: string, cwd?: string) => {
     killExisting(paneId)
-    return spawnAndRegister(paneId, getDefaultShell(), ['--login'], cwd || homedir())
+    const target = getTarget(targetId || getDefaultTargetId())
+    if (!target) return -1
+
+    const shell =
+      'getDefaultShell' in target
+        ? (target as { getDefaultShell: () => string }).getDefaultShell()
+        : 'bash'
+    const shellArgs =
+      'getDefaultShellArgs' in target
+        ? (target as { getDefaultShellArgs: () => string[] }).getDefaultShellArgs()
+        : ['--login']
+
+    const config = target.spawn(shell, shellArgs, cwd || homedir())
+    return spawnPty(paneId, config.command, config.args, config.cwd || '', config.env)
   })
 
+  // Create with specific command via target
   ipcMain.handle(
     'pty:createWithCommand',
-    (_event, paneId: string, command: string, args: string[], cwd?: string) => {
+    (_event, paneId: string, command: string, args: string[], targetId?: string, cwd?: string) => {
       killExisting(paneId)
-      return spawnAndRegister(paneId, command, args, cwd || homedir())
+      const target = getTarget(targetId || getDefaultTargetId())
+      if (!target) return -1
+
+      const config = target.spawn(command, args, cwd || homedir())
+      return spawnPty(paneId, config.command, config.args, config.cwd || '', config.env)
     }
   )
 

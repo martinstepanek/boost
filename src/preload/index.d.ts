@@ -1,11 +1,12 @@
 import { ElectronAPI } from '@electron-toolkit/preload'
 
 interface PtyAPI {
-  create: (paneId: string, cwd?: string) => Promise<number>
+  create: (paneId: string, targetId?: string, cwd?: string) => Promise<number>
   createWithCommand: (
     paneId: string,
     command: string,
     args: string[],
+    targetId?: string,
     cwd?: string
   ) => Promise<number>
   getClaudeSession: (pid: number) => Promise<string | null>
@@ -18,8 +19,13 @@ interface PtyAPI {
 
 interface DialogAPI {
   openFolder: () => Promise<string | null>
-  getHomedir: () => Promise<string>
-  listDir: (dirPath: string) => Promise<string[]>
+  getHomedir: (targetId?: string) => Promise<string>
+  listDir: (dirPath: string, targetId?: string) => Promise<string[]>
+}
+
+interface TargetsAPI {
+  getAvailable: () => Promise<Array<{ id: string; label: string }>>
+  getDefaultId: () => Promise<string>
 }
 
 declare global {
@@ -27,5 +33,6 @@ declare global {
     electron: ElectronAPI
     pty: PtyAPI
     dialog: DialogAPI
+    targets: TargetsAPI
   }
 }

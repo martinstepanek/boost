@@ -1,11 +1,16 @@
 import { app, shell, BrowserWindow, dialog, ipcMain } from 'electron'
 import { join } from 'path'
-import { homedir } from 'os'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import { createIPCHandler } from 'electron-trpc/main'
 import { appRouter } from '../shared/router'
 import { setupPtyManager, killAllPtys } from './pty-manager'
 import { WINDOW_WIDTH, WINDOW_HEIGHT } from '../shared/constants'
+import {
+  initTargets,
+  getTarget,
+  getDefaultTargetId,
+  getAvailableTargets
+} from './targets/target-resolver'
 
 app.commandLine.appendSwitch('disable-gpu')
 app.commandLine.appendSwitch('no-sandbox')
@@ -58,20 +63,27 @@ app.whenReady().then(() => {
     optimizer.watchWindowShortcuts(window)
   })
 
+  initTargets()
   setupPtyManager()
 
-  ipcMain.handle('dialog:getHomedir', () => {
-    return homedir()
+  ipcMain.handle('targets:getAvailable', () => {
+    return getAvailableTargets()
   })
 
-  ipcMain.handle('dialog:listDir', async (_event, dirPath: string) => {
-    const { readdir } = await import('fs/promises')
-    try {
-      const entries = await readdir(dirPath, { withFileTypes: true })
-      return entries.filter((e) => e.isDirectory()).map((e) => e.name)
-    } catch {
-      return []
-    }
+  ipcMain.handle('targets:getDefaultId', () => {
+    return getDefaultTargetId()
+  })
+
+  ipcMain.handle('dialog:getHomedir', async (_event, targetId?: string) => {
+    const target = getTarget(targetId || getDefaultTargetId())
+    if (!target) return '/home'
+    return await target.getHomedir()
+  })
+
+  ipcMain.handle('dialog:listDir', async (_event, dirPath: string, targetId?: string) => {
+    const target = getTarget(targetId || getDefaultTargetId())
+    if (!target) return []
+    return await target.listDir(dirPath)
   })
 
   ipcMain.handle('dialog:openFolder', async () => {

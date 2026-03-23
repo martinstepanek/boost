@@ -44,6 +44,7 @@ interface TerminalPaneProps {
   isFocused: boolean
   isVisible: boolean
   cwd?: string
+  targetId?: string
   app: string
   params: Record<string, unknown>
 }
@@ -53,6 +54,7 @@ export default function TerminalPane({
   isFocused,
   isVisible,
   cwd,
+  targetId,
   app,
   params
 }: TerminalPaneProps): React.JSX.Element {
@@ -121,9 +123,9 @@ export default function TerminalPane({
 
     if (appDef?.command) {
       const args = appDef.resolveArgs ? appDef.resolveArgs(params) : appDef.command.args
-      createPty = window.pty.createWithCommand(paneId, appDef.command.cmd, args, cwd)
+      createPty = window.pty.createWithCommand(paneId, appDef.command.cmd, args, targetId, cwd)
     } else {
-      createPty = window.pty.create(paneId, cwd)
+      createPty = window.pty.create(paneId, targetId, cwd)
     }
 
     createPty.then((pid) => {

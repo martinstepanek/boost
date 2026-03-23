@@ -32,6 +32,7 @@ interface TilingStore {
   setFocusedPane(paneId: string): void
   switchWorkspace(n: number): void
   setWorkspaceCwd(cwd: string): void
+  setWorkspaceTarget(targetId: string): void
   swapFocusedPane(direction: Direction): void
   moveFocusedPaneToWorkspace(n: number): void
   resizeSplit(splitId: string, newRatio: number): void
@@ -39,8 +40,8 @@ interface TilingStore {
   getPersistedState(): PersistedState
 }
 
-function createEmptyWorkspace(cwd: string): WorkspaceState {
-  return { layout: null, focusedPaneId: '', cwd }
+function createEmptyWorkspace(cwd: string, targetId: string = ''): WorkspaceState {
+  return { layout: null, focusedPaneId: '', cwd, targetId }
 }
 
 function replacePaneInTree(
@@ -215,6 +216,16 @@ export const useTilingStore = create<TilingStore>()(
       })
     },
 
+    setWorkspaceTarget(targetId): void {
+      const { activeWorkspace, workspaces } = get()
+      const ws = getWorkspace(workspaces, activeWorkspace)
+      if (!ws) return
+
+      set({
+        workspaces: updateWorkspace(workspaces, activeWorkspace, { ...ws, targetId })
+      })
+    },
+
     swapFocusedPane(direction): void {
       const { activeWorkspace, workspaces } = get()
       const ws = getWorkspace(workspaces, activeWorkspace)
@@ -293,7 +304,13 @@ export const useTilingStore = create<TilingStore>()(
 
       const newWorkspaces = { ...workspaces }
       const targetCwd = targetWs?.cwd ?? ws.cwd
-      newWorkspaces[n] = { layout: newTargetLayout, focusedPaneId: pane.id, cwd: targetCwd }
+      const targetTargetId = targetWs?.targetId ?? ws.targetId
+      newWorkspaces[n] = {
+        layout: newTargetLayout,
+        focusedPaneId: pane.id,
+        cwd: targetCwd,
+        targetId: targetTargetId
+      }
 
       if (newRoot === null) {
         // Last pane moved — keep workspace with empty layout

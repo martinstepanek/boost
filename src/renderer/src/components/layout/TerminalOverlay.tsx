@@ -8,8 +8,9 @@ import TerminalPane from './TerminalPane'
 interface PaneInfo {
   id: string
   cwd: string
+  targetId: string
   app: string
-  params: string // JSON-serialized for stable key
+  params: Record<string, unknown>
 }
 
 export default function TerminalOverlay(): React.JSX.Element {
@@ -20,6 +21,7 @@ export default function TerminalOverlay(): React.JSX.Element {
 
   const focusedPaneId = useTilingStore((s) => s.workspaces[s.activeWorkspace]?.focusedPaneId)
 
+  // Stable string key per pane: id\tcwd\ttargetId\tapp\tparams(json)
   const allPanesKey = useTilingStore((s) => {
     const parts: string[] = []
     for (const ws of Object.values(s.workspaces)) {
@@ -29,7 +31,7 @@ export default function TerminalOverlay(): React.JSX.Element {
         const node = findNode(ws.layout, id)
         const app = node?.type === 'pane' ? node.app : 'terminal'
         const params = node?.type === 'pane' ? JSON.stringify(node.params) : '{}'
-        parts.push(`${id}\t${ws.cwd}\t${app}\t${params}`)
+        parts.push(`${id}\t${ws.cwd}\t${ws.targetId}\t${app}\t${params}`)
       }
     }
     return parts.join('\n')
@@ -38,14 +40,13 @@ export default function TerminalOverlay(): React.JSX.Element {
   const allPanes: PaneInfo[] = useMemo(() => {
     if (!allPanesKey) return []
     return allPanesKey.split('\n').map((line) => {
-      const firstTab = line.indexOf('\t')
-      const secondTab = line.indexOf('\t', firstTab + 1)
-      const thirdTab = line.indexOf('\t', secondTab + 1)
+      const tabs = line.split('\t')
       return {
-        id: line.slice(0, firstTab),
-        cwd: line.slice(firstTab + 1, secondTab),
-        app: line.slice(secondTab + 1, thirdTab),
-        params: line.slice(thirdTab + 1)
+        id: tabs[0],
+        cwd: tabs[1],
+        targetId: tabs[2],
+        app: tabs[3],
+        params: JSON.parse(tabs[4]) as Record<string, unknown>
       }
     })
   }, [allPanesKey])
@@ -61,10 +62,9 @@ export default function TerminalOverlay(): React.JSX.Element {
 
   return (
     <>
-      {allPanes.map(({ id, cwd, app, params }) => {
+      {allPanes.map(({ id, cwd, targetId, app, params }) => {
         const rect = rects.get(id)
         const isVisible = activeSet.has(id) && !!rect && rect.w > 0
-        const parsedParams = JSON.parse(params) as Record<string, unknown>
         return (
           <div
             key={id}
@@ -82,8 +82,9 @@ export default function TerminalOverlay(): React.JSX.Element {
               isFocused={id === focusedPaneId}
               isVisible={isVisible}
               cwd={cwd}
+              targetId={targetId}
               app={app}
-              params={parsedParams}
+              params={params}
             />
           </div>
         )

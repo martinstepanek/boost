@@ -20,6 +20,7 @@ export interface WorkspaceState {
   layout: TilingNode | null
   focusedPaneId: string
   cwd: string
+  targetId: string
 }
 
 export interface PersistedState {
