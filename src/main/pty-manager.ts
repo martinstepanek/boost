@@ -60,16 +60,7 @@ export function setupPtyManager(): void {
     const target = getTarget(targetId || getDefaultTargetId())
     if (!target) return -1
 
-    const shell =
-      'getDefaultShell' in target
-        ? (target as { getDefaultShell: () => string }).getDefaultShell()
-        : 'bash'
-    const shellArgs =
-      'getDefaultShellArgs' in target
-        ? (target as { getDefaultShellArgs: () => string[] }).getDefaultShellArgs()
-        : ['--login']
-
-    const config = target.spawn(shell, shellArgs, cwd || homedir())
+    const config = target.spawn(target.getDefaultShell(), target.getDefaultShellArgs(), cwd || homedir())
     return spawnPty(paneId, config.command, config.args, config.cwd || '', config.env)
   })
 

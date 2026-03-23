@@ -6,6 +6,14 @@ export class PowershellTarget implements BackendTarget {
   id = 'powershell'
   label = 'PowerShell'
 
+  getDefaultShell(): string {
+    return 'powershell.exe'
+  }
+
+  getDefaultShellArgs(): string[] {
+    return ['-NoLogo']
+  }
+
   spawn(command: string, args: string[], cwd: string): SpawnConfig {
     if (command === 'powershell.exe' || command === 'pwsh.exe') {
       return { command, args, cwd, env: process.env as Record<string, string> }

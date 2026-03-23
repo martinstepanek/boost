@@ -13,6 +13,8 @@ export interface TargetInfo {
 export interface BackendTarget {
   id: string
   label: string
+  getDefaultShell(): string
+  getDefaultShellArgs(): string[]
   spawn(command: string, args: string[], cwd: string): SpawnConfig
   getHomedir(): Promise<string>
   listDir(path: string): Promise<string[]>

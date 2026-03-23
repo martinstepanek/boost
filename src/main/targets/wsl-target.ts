@@ -15,6 +15,14 @@ export class WslTarget implements BackendTarget {
     this.label = `WSL (${distro})`
   }
 
+  getDefaultShell(): string {
+    return 'bash'
+  }
+
+  getDefaultShellArgs(): string[] {
+    return ['-l']
+  }
+
   spawn(command: string, args: string[], cwd: string): SpawnConfig {
     return {
       command: 'wsl.exe',
