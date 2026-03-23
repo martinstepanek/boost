@@ -66,8 +66,6 @@ export default function WorkspaceSetup({
   const handleTargetChange = (targetId: string): void => {
     setSelectedTarget(targetId)
     setWorkspaceTarget(targetId)
-    setInputValue('')
-    setWorkspaceCwd('')
   }
 
   const handleTab = async (e: React.KeyboardEvent): Promise<void> => {
