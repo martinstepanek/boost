@@ -17,9 +17,10 @@ function randomColor(): string {
 
 export function createPane(
   app: string = 'terminal',
-  params: Record<string, unknown> = {}
+  params: Record<string, unknown> = {},
+  splitDirection: 'horizontal' | 'vertical' = 'horizontal'
 ): PaneNode {
-  return { type: 'pane', id: generateId('pane'), color: randomColor(), app, params }
+  return { type: 'pane', id: generateId('pane'), color: randomColor(), app, params, splitDirection }
 }
 
 export function findNode(root: TilingNode, id: string): TilingNode | null {
@@ -227,7 +228,8 @@ function swapPanes(root: TilingNode, idA: string, idB: string): TilingNode {
     id: placeholderId,
     color: '',
     app: 'terminal',
-    params: {}
+    params: {},
+    splitDirection: 'horizontal'
   }
   let tree = replacePaneNode(root, idA, placeholder)
   tree = replacePaneNode(tree, idB, nodeA)

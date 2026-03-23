@@ -1,5 +1,6 @@
 import { useShallow } from 'zustand/shallow'
 import { useTilingStore } from '../../stores/tiling-store'
+import { findNode } from '../../lib/tiling-tree'
 import { Button } from '../ui/button'
 
 export default function WorkspaceBar(): React.JSX.Element {
@@ -13,7 +14,12 @@ export default function WorkspaceBar(): React.JSX.Element {
   )
   const workspaces = useTilingStore((s) => s.workspaces)
   const switchWorkspace = useTilingStore((s) => s.switchWorkspace)
-  const splitDirection = useTilingStore((s) => s.splitDirection)
+  const splitDirection = useTilingStore((s) => {
+    const ws = s.workspaces[s.activeWorkspace]
+    if (!ws?.layout) return 'horizontal'
+    const node = findNode(ws.layout, ws.focusedPaneId)
+    return node?.type === 'pane' ? node.splitDirection : 'horizontal'
+  })
 
   return (
     <div

@@ -4,6 +4,7 @@ export interface PaneNode {
   color: string
   app: string
   params: Record<string, unknown>
+  splitDirection: 'horizontal' | 'vertical'
 }
 
 export interface SplitNode {

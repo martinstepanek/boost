@@ -10,9 +10,6 @@ interface PaneProps {
 
 export default function Pane({ pane, isVisible }: PaneProps): React.JSX.Element {
   const ref = useRef<HTMLDivElement>(null)
-  const isFocused = useTilingStore(
-    (s) => s.workspaces[s.activeWorkspace]?.focusedPaneId === pane.id
-  )
   const setFocusedPane = useTilingStore((s) => s.setFocusedPane)
 
   useEffect(() => {
@@ -41,14 +38,5 @@ export default function Pane({ pane, isVisible }: PaneProps): React.JSX.Element 
     }
   }, [pane.id, isVisible])
 
-  return (
-    <div
-      ref={ref}
-      className="flex-1 flex"
-      style={{
-        border: isFocused ? '1px solid var(--border-focus)' : '1px solid transparent'
-      }}
-      onMouseDown={() => setFocusedPane(pane.id)}
-    />
-  )
+  return <div ref={ref} className="flex-1 flex" onMouseDown={() => setFocusedPane(pane.id)} />
 }

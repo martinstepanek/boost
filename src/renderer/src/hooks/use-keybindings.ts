@@ -38,15 +38,15 @@ export function useKeybindings(): void {
         return
       }
 
-      // Split direction
+      // Split direction (per-pane, i3-style)
       if (!shift && code === 'KeyB') {
         e.preventDefault()
-        store.setSplitDirection('horizontal')
+        store.setPaneSplitDirection('horizontal')
         return
       }
       if (!shift && code === 'KeyV') {
         e.preventDefault()
-        store.setSplitDirection('vertical')
+        store.setPaneSplitDirection('vertical')
         return
       }
 

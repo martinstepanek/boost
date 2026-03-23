@@ -4,6 +4,7 @@ import type { Direction, PersistedState, TilingNode, WorkspaceState } from '../.
 import {
   createPane,
   extractPane,
+  findNode,
   findPaneInDirection,
   getAllPaneIds,
   movePaneInDirection,
@@ -18,11 +19,10 @@ interface TilingStore {
   activeWorkspace: number
   workspaces: Record<number, WorkspaceState>
   initialized: boolean
-  splitDirection: 'horizontal' | 'vertical'
   commandPaletteOpen: boolean
 
   initialize(persisted: PersistedState | null): void
-  setSplitDirection(direction: 'horizontal' | 'vertical'): void
+  setPaneSplitDirection(direction: 'horizontal' | 'vertical'): void
   toggleCommandPalette(): void
   closeCommandPalette(): void
   splitFocusedPane(): void
@@ -38,6 +38,13 @@ interface TilingStore {
   resizeSplit(splitId: string, newRatio: number): void
   setPaneParam(paneId: string, key: string, value: unknown): void
   getPersistedState(): PersistedState
+}
+
+function getFocusedPaneSplitDirection(ws: WorkspaceState): 'horizontal' | 'vertical' {
+  if (!ws.layout) return 'horizontal'
+  const node = findNode(ws.layout, ws.focusedPaneId)
+  if (node?.type === 'pane') return node.splitDirection
+  return 'horizontal'
 }
 
 function createEmptyWorkspace(cwd: string, targetId: string = ''): WorkspaceState {
@@ -81,14 +88,23 @@ export const useTilingStore = create<TilingStore>()(
     activeWorkspace: 1,
     workspaces: {},
     initialized: false,
-    splitDirection: 'horizontal',
     commandPaletteOpen: false,
 
     initialize(persisted: PersistedState | null): void {
       if (persisted && persisted.version === 1 && Object.keys(persisted.workspaces).length > 0) {
+        // Ensure all workspaces have required fields (handles old state format)
+        const workspaces: Record<number, WorkspaceState> = {}
+        for (const [key, ws] of Object.entries(persisted.workspaces)) {
+          workspaces[Number(key)] = {
+            layout: ws.layout ?? null,
+            focusedPaneId: ws.focusedPaneId ?? '',
+            cwd: ws.cwd ?? '',
+            targetId: ws.targetId ?? ''
+          }
+        }
         set({
           activeWorkspace: persisted.activeWorkspace,
-          workspaces: persisted.workspaces,
+          workspaces,
           initialized: true
         })
       } else {
@@ -100,8 +116,20 @@ export const useTilingStore = create<TilingStore>()(
       }
     },
 
-    setSplitDirection(direction): void {
-      set({ splitDirection: direction })
+    setPaneSplitDirection(direction): void {
+      const { activeWorkspace, workspaces } = get()
+      const ws = getWorkspace(workspaces, activeWorkspace)
+      if (!ws || ws.layout === null) return
+
+      const updated = updatePaneInTree(ws.layout, ws.focusedPaneId, (pane) => ({
+        ...pane,
+        splitDirection: direction
+      }))
+      if (updated !== ws.layout) {
+        set({
+          workspaces: updateWorkspace(workspaces, activeWorkspace, { ...ws, layout: updated })
+        })
+      }
     },
 
     toggleCommandPalette(): void {
@@ -113,10 +141,11 @@ export const useTilingStore = create<TilingStore>()(
     },
 
     createPaneForApp(appId): void {
-      const { activeWorkspace, workspaces, splitDirection } = get()
+      const { activeWorkspace, workspaces } = get()
       const ws = getWorkspace(workspaces, activeWorkspace)
       if (!ws) return
 
+      const splitDirection = getFocusedPaneSplitDirection(ws)
       const pane = createPane(appId)
 
       if (ws.layout === null) {
@@ -145,7 +174,7 @@ export const useTilingStore = create<TilingStore>()(
     },
 
     splitFocusedPane(): void {
-      const { activeWorkspace, workspaces, splitDirection } = get()
+      const { activeWorkspace, workspaces } = get()
       const ws = getWorkspace(workspaces, activeWorkspace)
       if (!ws) return
 
@@ -162,6 +191,7 @@ export const useTilingStore = create<TilingStore>()(
         return
       }
 
+      const splitDirection = getFocusedPaneSplitDirection(ws)
       const result = splitPane(ws.layout, ws.focusedPaneId, splitDirection)
       if (!result) return
 
