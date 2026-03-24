@@ -105,15 +105,15 @@ Splits are always 50/50. Three panes in the same direction gives 50/25/25, not 3
 
 ### Worktree selector (setup screen)
 
-| Key                | Action                                     |
-| ------------------ | ------------------------------------------ |
-| `↓`                | Enter worktree selector from path input    |
-| `←` / `→`         | Navigate between worktree pills            |
-| `Enter`            | Select worktree or open "+ New" input      |
-| `↑` / `Escape`    | Return focus to path input                 |
-| `Delete`           | Remove focused worktree (non-main only)    |
-| `Enter` on confirm | Force-delete worktree with uncommitted changes |
-| `Escape` on confirm| Cancel deletion                            |
+| Key                 | Action                                         |
+| ------------------- | ---------------------------------------------- |
+| `↓`                 | Enter worktree selector from path input        |
+| `←` / `→`           | Navigate between worktree pills                |
+| `Enter`             | Select worktree or open "+ New" input          |
+| `↑` / `Escape`      | Return focus to path input                     |
+| `Delete`            | Remove focused worktree (non-main only)        |
+| `Enter` on confirm  | Force-delete worktree with uncommitted changes |
+| `Escape` on confirm | Cancel deletion                                |
 
 ## Documentation
 
