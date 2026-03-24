@@ -9,7 +9,12 @@ export interface FileStatus {
 }
 
 export async function getStatus(cwd: string, target: BackendTarget): Promise<FileStatus[]> {
-  const output = await target.execCommand('git', ['-C', cwd, 'status', '--porcelain=v1'])
+  let output: string
+  try {
+    output = await target.execCommand('git', ['-C', cwd, 'status', '--porcelain=v1'])
+  } catch {
+    return []
+  }
   if (!output.trim()) return []
 
   const files: FileStatus[] = []
