@@ -3,7 +3,7 @@ import { useTilingStore } from './stores/tiling-store'
 import { useKeybindings } from './hooks/use-keybindings'
 import { usePersistence } from './hooks/use-persistence'
 import TilingContainer from './components/layout/TilingContainer'
-import TerminalOverlay from './components/layout/TerminalOverlay'
+import PaneOverlay from './components/layout/PaneOverlay'
 import WorkspaceBar from './components/workspace/WorkspaceBar'
 import WorkspaceSetup from './components/workspace/WorkspaceSetup'
 import CommandPalette from './components/CommandPalette'
@@ -52,7 +52,7 @@ function App(): React.JSX.Element {
           </div>
         )
       })}
-      <TerminalOverlay />
+      <PaneOverlay />
       <CommandPalette />
       <WorkspaceBar />
     </div>

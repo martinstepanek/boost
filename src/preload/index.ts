@@ -73,7 +73,22 @@ const gitAPI = {
     targetId?: string,
     force?: boolean
   ): Promise<void> =>
-    ipcRenderer.invoke('git:removeWorktree', repoPath, worktreePath, targetId, force)
+    ipcRenderer.invoke('git:removeWorktree', repoPath, worktreePath, targetId, force),
+  status: (
+    cwd: string,
+    targetId?: string
+  ): Promise<Array<{ path: string; status: string; staged: boolean }>> =>
+    ipcRenderer.invoke('git:status', cwd, targetId),
+  diff: (
+    cwd: string,
+    filePath: string | null,
+    staged: boolean,
+    targetId?: string
+  ): Promise<string> => ipcRenderer.invoke('git:diff', cwd, filePath, staged, targetId),
+  fileContent: (cwd: string, filePath: string, targetId?: string): Promise<string> =>
+    ipcRenderer.invoke('git:fileContent', cwd, filePath, targetId),
+  readWorkingFile: (cwd: string, filePath: string): Promise<string> =>
+    ipcRenderer.invoke('git:readWorkingFile', cwd, filePath)
 }
 
 const targetsAPI = {

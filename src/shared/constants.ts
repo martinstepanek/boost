@@ -49,6 +49,7 @@ export const REFIT_DELAY_MS = 10
 
 // Git
 export const GIT_REPO_CHECK_DEBOUNCE_MS = 500
+export const GIT_STATUS_POLL_MS = 2000
 
 // Tiling
 export const SPLIT_RATIO_MIN = 0.1

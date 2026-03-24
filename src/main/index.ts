@@ -11,6 +11,7 @@ import {
   addWorktree,
   removeWorktree
 } from './git-worktree'
+import { getStatus, getDiff, getFileContent, readWorkingFile } from './git-review'
 import { WINDOW_WIDTH, WINDOW_HEIGHT } from '../shared/constants'
 import {
   initTargets,
@@ -128,6 +129,34 @@ app.whenReady().then(() => {
       return await removeWorktree(repoPath, worktreePath, target, force)
     }
   )
+
+  ipcMain.handle('git:status', async (_event, cwd: string, targetId?: string) => {
+    const target = getTarget(targetId || getDefaultTargetId())
+    if (!target) return []
+    return await getStatus(cwd, target)
+  })
+
+  ipcMain.handle(
+    'git:diff',
+    async (_event, cwd: string, filePath: string | null, staged: boolean, targetId?: string) => {
+      const target = getTarget(targetId || getDefaultTargetId())
+      if (!target) return ''
+      return await getDiff(cwd, filePath, target, staged)
+    }
+  )
+
+  ipcMain.handle(
+    'git:fileContent',
+    async (_event, cwd: string, filePath: string, targetId?: string) => {
+      const target = getTarget(targetId || getDefaultTargetId())
+      if (!target) return ''
+      return await getFileContent(cwd, filePath, target)
+    }
+  )
+
+  ipcMain.handle('git:readWorkingFile', async (_event, cwd: string, filePath: string) => {
+    return await readWorkingFile(cwd, filePath)
+  })
 
   ipcMain.handle('dialog:openFolder', async () => {
     const win = BrowserWindow.getAllWindows()[0]

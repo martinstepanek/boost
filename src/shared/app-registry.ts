@@ -3,6 +3,7 @@ export interface AppDefinition {
   label: string
   description: string
   icon: string
+  gui?: boolean
   command?: { cmd: string; args: string[] }
   resolveArgs?: (params: Record<string, unknown>) => string[]
 }
@@ -24,6 +25,13 @@ export const APP_REGISTRY: AppDefinition[] = [
       const sessionId = params.sessionId
       return typeof sessionId === 'string' ? ['--resume', sessionId] : []
     }
+  },
+  {
+    id: 'review',
+    label: 'Review',
+    description: 'Review uncommitted changes',
+    icon: 'GitPullRequestDraft',
+    gui: true
   }
 ]
 

@@ -1,30 +1,53 @@
-import { useEffect, useCallback } from 'react'
-import { Terminal, Sparkles } from 'lucide-react'
+import { useEffect, useCallback, useState } from 'react'
+import { Terminal, Sparkles, GitPullRequestDraft } from 'lucide-react'
 import { useTilingStore } from '../stores/tiling-store'
 import { APP_REGISTRY, type AppDefinition } from '../../../shared/app-registry'
 import { Command, CommandInput, CommandList, CommandEmpty, CommandItem } from './ui/command'
 
 const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
   Terminal,
-  Sparkles
+  Sparkles,
+  GitPullRequestDraft
 }
 
 export default function CommandPalette(): React.JSX.Element | null {
   const open = useTilingStore((s) => s.commandPaletteOpen)
   const closeCommandPalette = useTilingStore((s) => s.closeCommandPalette)
-  const splitFocusedPane = useTilingStore((s) => s.splitFocusedPane)
   const createPaneForApp = useTilingStore((s) => s.createPaneForApp)
+  const cwd = useTilingStore((s) => s.workspaces[s.activeWorkspace]?.cwd ?? '')
+  const targetId = useTilingStore((s) => s.workspaces[s.activeWorkspace]?.targetId)
+  const [disabledApps, setDisabledApps] = useState<Set<string>>(new Set())
+
+  // Check git availability when palette opens
+  useEffect(() => {
+    if (!open) return
+    let cancelled = false
+    async function check(): Promise<void> {
+      const disabled = new Set<string>()
+      try {
+        const installed = await window.git.isInstalled(targetId)
+        const isRepo = cwd ? await window.git.isRepo(cwd, targetId) : false
+        if (!installed || !isRepo) {
+          disabled.add('review')
+        }
+      } catch {
+        disabled.add('review')
+      }
+      if (!cancelled) setDisabledApps(disabled)
+    }
+    check()
+    return () => {
+      cancelled = true
+    }
+  }, [open, cwd, targetId])
 
   const handleSelect = useCallback(
     (app: AppDefinition) => {
+      if (disabledApps.has(app.id)) return
       closeCommandPalette()
-      if (app.command) {
-        createPaneForApp(app.id)
-      } else {
-        splitFocusedPane()
-      }
+      createPaneForApp(app.id)
     },
-    [closeCommandPalette, splitFocusedPane, createPaneForApp]
+    [closeCommandPalette, createPaneForApp, disabledApps]
   )
 
   useEffect(() => {
@@ -56,12 +79,21 @@ export default function CommandPalette(): React.JSX.Element | null {
             <CommandEmpty>No results found.</CommandEmpty>
             {APP_REGISTRY.map((app) => {
               const Icon = ICON_MAP[app.icon]
+              const isDisabled = disabledApps.has(app.id)
               return (
-                <CommandItem key={app.id} value={app.label} onSelect={() => handleSelect(app)}>
+                <CommandItem
+                  key={app.id}
+                  value={app.label}
+                  onSelect={() => handleSelect(app)}
+                  disabled={isDisabled}
+                  className={isDisabled ? 'opacity-40 cursor-not-allowed' : ''}
+                >
                   {Icon && <Icon className="h-4 w-4 text-[var(--text-secondary)]" />}
                   <div>
                     <div className="text-sm">{app.label}</div>
-                    <div className="text-xs text-[var(--text-secondary)]">{app.description}</div>
+                    <div className="text-xs text-[var(--text-secondary)]">
+                      {isDisabled ? 'Not available (not a git repository)' : app.description}
+                    </div>
                   </div>
                 </CommandItem>
               )

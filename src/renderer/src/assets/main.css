@@ -62,3 +62,130 @@ body {
 #root {
   height: 100%;
 }
+
+/* diff2html dark theme overrides */
+.review-diff-container .d2h-wrapper {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+
+.review-diff-container .d2h-file-wrapper {
+  border: none;
+  margin-bottom: 0;
+}
+
+.review-diff-container .d2h-file-header {
+  display: none;
+}
+
+.review-diff-container .d2h-file-diff {
+  overflow: visible;
+}
+
+.review-diff-container .d2h-diff-table {
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+
+.review-diff-container .d2h-code-line {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+.review-diff-container .d2h-code-line-ctn {
+  background: none;
+  color: var(--text-primary);
+}
+
+.review-diff-container .d2h-code-line-prefix {
+  background: var(--bg-primary);
+  color: var(--text-secondary);
+}
+
+.review-diff-container .d2h-info {
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+  border-color: var(--border);
+}
+
+/* Added lines */
+.review-diff-container .d2h-ins {
+  background: rgba(48, 209, 88, 0.1);
+  border-color: rgba(48, 209, 88, 0.2);
+}
+.review-diff-container .d2h-ins .d2h-code-line-ctn {
+  background: none;
+}
+.review-diff-container .d2h-ins .d2h-code-line-prefix {
+  background: rgba(48, 209, 88, 0.15);
+  color: #30d158;
+}
+.review-diff-container ins.d2h-change {
+  background: rgba(48, 209, 88, 0.25);
+  text-decoration: none;
+}
+
+/* Deleted lines */
+.review-diff-container .d2h-del {
+  background: rgba(255, 69, 58, 0.1);
+  border-color: rgba(255, 69, 58, 0.2);
+}
+.review-diff-container .d2h-del .d2h-code-line-ctn {
+  background: none;
+}
+.review-diff-container .d2h-del .d2h-code-line-prefix {
+  background: rgba(255, 69, 58, 0.15);
+  color: #ff453a;
+}
+.review-diff-container del.d2h-change {
+  background: rgba(255, 69, 58, 0.25);
+  text-decoration: none;
+}
+
+/* Line numbers */
+.review-diff-container .d2h-code-linenumber {
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+  border-color: var(--border);
+  cursor: default;
+  font-size: 11px;
+}
+
+.review-diff-container .d2h-ins .d2h-code-linenumber {
+  background: rgba(48, 209, 88, 0.12);
+  color: var(--text-secondary);
+  border-color: rgba(48, 209, 88, 0.2);
+}
+
+.review-diff-container .d2h-del .d2h-code-linenumber {
+  background: rgba(255, 69, 58, 0.12);
+  color: var(--text-secondary);
+  border-color: rgba(255, 69, 58, 0.2);
+}
+
+/* Hunk header */
+.review-diff-container .d2h-code-line-ctn .d2h-info {
+  background: var(--bg-secondary);
+}
+
+.review-diff-container .d2h-tag {
+  display: none;
+}
+
+/* Scrollbar styling in diff */
+.review-diff-container::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+.review-diff-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+.review-diff-container::-webkit-scrollbar-thumb {
+  background: var(--bg-tertiary);
+  border-radius: 4px;
+}
+.review-diff-container::-webkit-scrollbar-thumb:hover {
+  background: var(--text-secondary);
+}

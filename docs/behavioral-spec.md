@@ -239,3 +239,52 @@ This document captures all specific behavioral decisions made during development
 ### Keybinding implementation
 
 - Uses `e.code` (not `e.key`) — layout-independent, unaffected by Alt producing special characters
+
+## Review App
+
+### Overview
+
+- GUI-based app for reviewing uncommitted git changes (staged + unstaged)
+- Launchable from the command palette (Alt+D → "Review")
+- First non-terminal pane type — uses the `PaneOverlay` dispatch pattern instead of xterm.js
+
+### Command palette availability
+
+- **Disabled** (grayed out) when git is not installed or workspace cwd is not a git repository
+- Shows "Not available (not a git repository)" when disabled
+- Git availability is checked each time the palette opens
+
+### Layout
+
+- **Left panel** (~250px): scrollable file list grouped by staged/unstaged
+- **Right panel** (fill): diff view rendered by diff2html with syntax highlighting
+- Header bar with "Review" title and refresh button
+
+### File list behavior
+
+- Files grouped into "Staged" and "Changes" (unstaged) sections
+- Each file shows a status badge (M/A/D/R/C/?) with color coding
+- File path shown with directory prefix dimmed
+- First file auto-selected on load
+- Clicking a file loads its diff in the right panel
+
+### Diff rendering
+
+- Uses **diff2html** library for syntax-highlighted unified diffs
+- Dark color scheme matching Boost's theme
+- Green background for additions, red for deletions
+- Line numbers shown for both old and new content
+- Untracked files rendered as synthetic "all added" diffs
+
+### Auto-refresh
+
+- Polls `git status` every **2 seconds** while the pane is visible
+- When status changes: updates file list and re-fetches diff for selected file
+- If selected file is no longer in the list, auto-selects the first available file
+- Manual refresh available via the header refresh button
+
+### Pane abstraction
+
+- `PaneOverlay` (renamed from `TerminalOverlay`) dispatches to the correct pane content component based on the `app` field
+- `app === 'review'` → `ReviewPane`, all others → `TerminalPane`
+- `AppDefinition.gui` field marks non-terminal apps

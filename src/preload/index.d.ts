@@ -41,6 +41,18 @@ interface GitAPI {
     targetId?: string,
     force?: boolean
   ) => Promise<void>
+  status: (
+    cwd: string,
+    targetId?: string
+  ) => Promise<Array<{ path: string; status: string; staged: boolean }>>
+  diff: (
+    cwd: string,
+    filePath: string | null,
+    staged: boolean,
+    targetId?: string
+  ) => Promise<string>
+  fileContent: (cwd: string, filePath: string, targetId?: string) => Promise<string>
+  readWorkingFile: (cwd: string, filePath: string) => Promise<string>
 }
 
 interface TargetsAPI {

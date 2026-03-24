@@ -4,6 +4,7 @@ import { useTilingStore } from '../../stores/tiling-store'
 import { getAllPaneIds, findNode } from '../../lib/tiling-tree'
 import { paneRectStore } from '../../lib/pane-rect-store'
 import TerminalPane from './TerminalPane'
+import ReviewPane from './ReviewPane'
 
 interface PaneInfo {
   id: string
@@ -13,7 +14,24 @@ interface PaneInfo {
   params: Record<string, unknown>
 }
 
-export default function TerminalOverlay(): React.JSX.Element {
+interface PaneContentProps {
+  paneId: string
+  isFocused: boolean
+  isVisible: boolean
+  cwd?: string
+  targetId?: string
+  app: string
+  params: Record<string, unknown>
+}
+
+function PaneContent({ app, ...props }: PaneContentProps): React.JSX.Element {
+  if (app === 'review') {
+    return <ReviewPane {...props} />
+  }
+  return <TerminalPane app={app} {...props} />
+}
+
+export default function PaneOverlay(): React.JSX.Element {
   const rects = useSyncExternalStore(
     (cb) => paneRectStore.subscribe(cb),
     () => paneRectStore.getSnapshot()
@@ -80,7 +98,7 @@ export default function TerminalOverlay(): React.JSX.Element {
               display: isVisible ? 'flex' : 'none'
             }}
           >
-            <TerminalPane
+            <PaneContent
               paneId={id}
               isFocused={id === focusedPaneId}
               isVisible={isVisible}
