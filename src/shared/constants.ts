@@ -10,6 +10,7 @@ export const PTY_INITIAL_ROWS = 24
 export const PTY_TERM_NAME = 'xterm-256color'
 
 // Terminal
+export const TERMINAL_SCROLLBACK = 5000
 export const TERMINAL_FONT_SIZE = 13
 export const TERMINAL_LINE_HEIGHT = 1.35
 export const TERMINAL_FONT_FAMILY =

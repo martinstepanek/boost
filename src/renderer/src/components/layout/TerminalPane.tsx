@@ -1,11 +1,13 @@
 import { useEffect, useRef } from 'react'
 import { Terminal } from '@xterm/xterm'
 import { FitAddon } from '@xterm/addon-fit'
+import { WebglAddon } from '@xterm/addon-webgl'
 import '@xterm/xterm/css/xterm.css'
 import {
   TERMINAL_FONT_SIZE,
   TERMINAL_LINE_HEIGHT,
   TERMINAL_FONT_FAMILY,
+  TERMINAL_SCROLLBACK,
   TERMINAL_THEME,
   TERMINAL_PADDING,
   RESIZE_DEBOUNCE_MS,
@@ -71,6 +73,8 @@ export default function TerminalPane({
       fontSize: TERMINAL_FONT_SIZE,
       fontFamily: TERMINAL_FONT_FAMILY,
       lineHeight: TERMINAL_LINE_HEIGHT,
+      scrollback: TERMINAL_SCROLLBACK,
+      fastScrollSensitivity: 5,
       theme: TERMINAL_THEME,
       allowProposedApi: true
     })
@@ -78,6 +82,15 @@ export default function TerminalPane({
     const fitAddon = new FitAddon()
     terminal.loadAddon(fitAddon)
     terminal.open(containerRef.current)
+
+    // GPU-accelerated rendering — falls back to canvas if WebGL unavailable
+    try {
+      const webgl = new WebglAddon()
+      webgl.onContextLoss(() => webgl.dispose())
+      terminal.loadAddon(webgl)
+    } catch {
+      // WebGL not supported, canvas renderer is fine
+    }
     terminalRef.current = terminal
     registerFitAddon(paneId, fitAddon)
 
