@@ -36,7 +36,7 @@ export class WslTarget implements BackendTarget {
     const fullCmd = [command, ...args].map((a) => (a.includes(' ') ? `"${a}"` : a)).join(' ')
     return {
       command: 'wsl.exe',
-      args: ['-d', this.distro, '--cd', cwd, '--', 'bash', '-lc', fullCmd],
+      args: ['-d', this.distro, '--cd', cwd, '--', 'bash', '-lic', fullCmd],
       env: process.env as Record<string, string>
     }
   }
@@ -73,7 +73,7 @@ export class WslTarget implements BackendTarget {
     const fullCmd = [command, ...args].map(shellEscape).join(' ')
     const wslArgs = ['-d', this.distro]
     if (cwd) wslArgs.push('--cd', cwd)
-    wslArgs.push('--', 'bash', '-lc', fullCmd)
+    wslArgs.push('--', 'bash', '-lic', fullCmd)
     return execSync(['wsl.exe', ...wslArgs].join(' '), {
       encoding: 'utf-8',
       timeout: 10000
