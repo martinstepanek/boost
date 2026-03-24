@@ -1,4 +1,4 @@
-import { execSync } from 'child_process'
+import { execSync, execFileSync } from 'child_process'
 import { readdir } from 'fs/promises'
 import { join } from 'path'
 import type { BackendTarget, SpawnConfig } from './backend-target'
@@ -68,13 +68,11 @@ export class WslTarget implements BackendTarget {
   }
 
   async execCommand(command: string, args: string[], cwd?: string): Promise<string> {
-    // Use single quotes for shell-safe escaping (escape any existing single quotes)
-    const shellEscape = (s: string): string => `'${s.replace(/'/g, "'\\''")}'`
-    const fullCmd = [command, ...args].map(shellEscape).join(' ')
+    const fullCmd = [command, ...args].join(' ')
     const wslArgs = ['-d', this.distro]
     if (cwd) wslArgs.push('--cd', cwd)
     wslArgs.push('--', 'bash', '-lic', fullCmd)
-    return execSync(['wsl.exe', ...wslArgs].join(' '), {
+    return execFileSync('wsl.exe', wslArgs, {
       encoding: 'utf-8',
       timeout: 10000
     }).trim()
