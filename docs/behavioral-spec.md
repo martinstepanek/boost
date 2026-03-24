@@ -180,8 +180,9 @@ This document captures all specific behavioral decisions made during development
 
 ### Claude Code session persistence
 
-- When Claude Code is spawned via command palette, the PTY PID is tracked
-- Poll `~/.claude/sessions/{pid}.json` every 2s (up to 30s) for session ID
+- When Claude Code is spawned, the pane's target and spawn time are tracked
+- **Local targets**: poll `~/.claude/sessions/{pid}.json` every 2s (up to 30s) for session ID
+- **WSL targets**: scan `\\wsl.localhost\<distro>\<homedir>\.claude\sessions\` via UNC path for the newest session file created after spawn time (PID-based lookup doesn't work across the Windows/WSL boundary)
 - Once found, stored in `params.sessionId` on the pane
 - On app restart, panes with `params.sessionId` spawn `claude --resume <id>`
 - `resolveArgs` in app registry maps `params.sessionId` to `['--resume', sessionId]`

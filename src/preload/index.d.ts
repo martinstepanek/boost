@@ -9,7 +9,7 @@ interface PtyAPI {
     targetId?: string,
     cwd?: string
   ) => Promise<number>
-  getClaudeSession: (pid: number) => Promise<string | null>
+  getClaudeSession: (paneId: string) => Promise<string | null>
   write: (paneId: string, data: string) => void
   resize: (paneId: string, cols: number, rows: number) => void
   close: (paneId: string) => Promise<void>

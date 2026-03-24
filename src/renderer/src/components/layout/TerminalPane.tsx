@@ -25,11 +25,11 @@ import { useTilingStore } from '../../stores/tiling-store'
 const SESSION_POLL_INTERVAL_MS = 2000
 const SESSION_POLL_MAX_ATTEMPTS = 15
 
-function pollForClaudeSession(paneId: string, pid: number): void {
+function pollForClaudeSession(paneId: string): void {
   let attempts = 0
   const interval = setInterval(async () => {
     attempts++
-    const sessionId = await window.pty.getClaudeSession(pid)
+    const sessionId = await window.pty.getClaudeSession(paneId)
     if (sessionId) {
       clearInterval(interval)
       useTilingStore.getState().setPaneParam(paneId, 'sessionId', sessionId)
@@ -129,7 +129,7 @@ export default function TerminalPane({
       createPty = window.pty.create(paneId, targetId, cwd)
     }
 
-    createPty.then((pid) => {
+    createPty.then(() => {
       if (disposed) return
       ptyReady = true
       fitAddon.fit()
@@ -138,7 +138,7 @@ export default function TerminalPane({
 
       // Poll for claude session ID if this is a new claude pane (no sessionId yet)
       if (app === 'claude' && !params.sessionId) {
-        pollForClaudeSession(paneId, pid)
+        pollForClaudeSession(paneId)
       }
     })
 

@@ -2,11 +2,12 @@ import { spawn, IPty } from 'node-pty'
 import { ipcMain, BrowserWindow } from 'electron'
 import { homedir } from 'os'
 import { join } from 'path'
-import { readFile } from 'fs/promises'
+import { readFile, readdir, stat } from 'fs/promises'
 import { PTY_INITIAL_COLS, PTY_INITIAL_ROWS, PTY_TERM_NAME } from '../shared/constants'
 import { getTarget, getDefaultTargetId } from './targets/target-resolver'
 
 const ptys = new Map<string, IPty>()
+const paneTargets = new Map<string, { targetId: string; spawnTime: number }>()
 
 function getMainWindow(): BrowserWindow | null {
   const win = BrowserWindow.getAllWindows()[0]
@@ -18,6 +19,7 @@ function killExisting(paneId: string): void {
   if (existing) {
     existing.kill()
     ptys.delete(paneId)
+    paneTargets.delete(paneId)
   }
 }
 
@@ -53,13 +55,57 @@ function spawnPty(
   return pty.pid
 }
 
+async function getWslClaudeSession(
+  targetId: string,
+  spawnTime: number
+): Promise<string | null> {
+  const distro = targetId.replace('wsl:', '')
+  const target = getTarget(targetId)
+  if (!target) return null
+
+  try {
+    const wslHome = await target.getHomedir()
+    const sessionsUncPath = join(
+      `\\\\wsl.localhost\\${distro}`,
+      wslHome,
+      '.claude',
+      'sessions'
+    )
+
+    const entries = await readdir(sessionsUncPath)
+    const jsonFiles = entries.filter((f) => f.endsWith('.json'))
+    if (jsonFiles.length === 0) return null
+
+    // Find the newest session file created after our spawn time
+    let newest: { file: string; mtime: number } | null = null
+    for (const file of jsonFiles) {
+      const filePath = join(sessionsUncPath, file)
+      const fileStat = await stat(filePath)
+      const mtime = fileStat.mtimeMs
+      if (mtime >= spawnTime && (!newest || mtime > newest.mtime)) {
+        newest = { file: filePath, mtime }
+      }
+    }
+
+    if (!newest) return null
+
+    const data = await readFile(newest.file, 'utf-8')
+    const parsed = JSON.parse(data)
+    return typeof parsed.sessionId === 'string' ? parsed.sessionId : null
+  } catch {
+    return null
+  }
+}
+
 export function setupPtyManager(): void {
   // Create shell via target
   ipcMain.handle('pty:create', (_event, paneId: string, targetId?: string, cwd?: string) => {
     killExisting(paneId)
-    const target = getTarget(targetId || getDefaultTargetId())
+    const resolvedTargetId = targetId || getDefaultTargetId()
+    const target = getTarget(resolvedTargetId)
     if (!target) return -1
 
+    paneTargets.set(paneId, { targetId: resolvedTargetId, spawnTime: Date.now() })
     const config = target.spawn(
       target.getDefaultShell(),
       target.getDefaultShellArgs(),
@@ -73,16 +119,32 @@ export function setupPtyManager(): void {
     'pty:createWithCommand',
     (_event, paneId: string, command: string, args: string[], targetId?: string, cwd?: string) => {
       killExisting(paneId)
-      const target = getTarget(targetId || getDefaultTargetId())
+      const resolvedTargetId = targetId || getDefaultTargetId()
+      const target = getTarget(resolvedTargetId)
       if (!target) return -1
 
+      paneTargets.set(paneId, { targetId: resolvedTargetId, spawnTime: Date.now() })
       const config = target.spawn(command, args, cwd || homedir())
       return spawnPty(paneId, config.command, config.args, config.cwd || '', config.env)
     }
   )
 
-  ipcMain.handle('pty:getClaudeSession', async (_event, pid: number) => {
-    const sessionFile = join(homedir(), '.claude', 'sessions', `${pid}.json`)
+  ipcMain.handle('pty:getClaudeSession', async (_event, paneId: string) => {
+    const pty = ptys.get(paneId)
+    const paneInfo = paneTargets.get(paneId)
+    if (!pty) return null
+
+    const targetId = paneInfo?.targetId || getDefaultTargetId()
+    const target = getTarget(targetId)
+    if (!target) return null
+
+    // For WSL targets, scan sessions dir via UNC path (PID doesn't match across OS boundary)
+    if (targetId.startsWith('wsl:')) {
+      return getWslClaudeSession(targetId, paneInfo?.spawnTime || 0)
+    }
+
+    // For local targets, use PID-based lookup
+    const sessionFile = join(homedir(), '.claude', 'sessions', `${pty.pid}.json`)
     try {
       const data = await readFile(sessionFile, 'utf-8')
       const parsed = JSON.parse(data)
@@ -109,6 +171,7 @@ export function setupPtyManager(): void {
     if (pty) {
       pty.kill()
       ptys.delete(paneId)
+      paneTargets.delete(paneId)
     }
   })
 }
@@ -118,4 +181,5 @@ export function killAllPtys(): void {
     pty.kill()
   }
   ptys.clear()
+  paneTargets.clear()
 }

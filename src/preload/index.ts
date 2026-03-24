@@ -18,8 +18,8 @@ const ptyAPI = {
     cwd?: string
   ): Promise<number> =>
     ipcRenderer.invoke('pty:createWithCommand', paneId, command, args, targetId, cwd),
-  getClaudeSession: (pid: number): Promise<string | null> =>
-    ipcRenderer.invoke('pty:getClaudeSession', pid),
+  getClaudeSession: (paneId: string): Promise<string | null> =>
+    ipcRenderer.invoke('pty:getClaudeSession', paneId),
   write: (paneId: string, data: string): void => {
     ipcRenderer.send('pty:write', paneId, data)
   },
