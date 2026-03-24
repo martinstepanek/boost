@@ -37,6 +37,12 @@ export interface PersistedState {
   workspaces: Record<number, WorkspaceState>
 }
 
+export interface Worktree {
+  path: string
+  branch: string
+  isMain: boolean
+}
+
 export type Direction = 'left' | 'down' | 'up' | 'right'
 
 export interface Rect {

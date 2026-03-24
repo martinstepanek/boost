@@ -23,6 +23,26 @@ interface DialogAPI {
   listDir: (dirPath: string, targetId?: string) => Promise<string[]>
 }
 
+interface GitAPI {
+  isInstalled: (targetId?: string) => Promise<boolean>
+  isRepo: (path: string, targetId?: string) => Promise<boolean>
+  listWorktrees: (
+    repoPath: string,
+    targetId?: string
+  ) => Promise<Array<{ path: string; branch: string; isMain: boolean }>>
+  addWorktree: (
+    repoPath: string,
+    branchName: string,
+    targetId?: string
+  ) => Promise<{ path: string }>
+  removeWorktree: (
+    repoPath: string,
+    worktreePath: string,
+    targetId?: string,
+    force?: boolean
+  ) => Promise<void>
+}
+
 interface TargetsAPI {
   getAvailable: () => Promise<Array<{ id: string; label: string }>>
   getDefaultId: () => Promise<string>
@@ -33,6 +53,7 @@ declare global {
     electron: ElectronAPI
     pty: PtyAPI
     dialog: DialogAPI
+    git: GitAPI
     targets: TargetsAPI
   }
 }

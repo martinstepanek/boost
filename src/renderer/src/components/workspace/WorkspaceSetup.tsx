@@ -1,6 +1,8 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { useTilingStore } from '../../stores/tiling-store'
 import { Button } from '../ui/button'
+import WorktreeSelector from './WorktreeSelector'
+import { GIT_REPO_CHECK_DEBOUNCE_MS } from '../../../../shared/constants'
 
 interface TargetInfo {
   id: string
@@ -24,6 +26,9 @@ export default function WorkspaceSetup({
   const [homedir, setHomedir] = useState('')
   const [targets, setTargets] = useState<TargetInfo[]>([])
   const [selectedTarget, setSelectedTarget] = useState(currentTargetId)
+  const [gitAvailable, setGitAvailable] = useState<boolean | null>(null)
+  const [isGitRepo, setIsGitRepo] = useState(false)
+  const [resolvedRepoPath, setResolvedRepoPath] = useState('')
   const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
@@ -59,6 +64,49 @@ export default function WorkspaceSetup({
       inputRef.current?.focus()
     }
   }, [isActive, hasLayout])
+
+  // Check git availability when target changes
+  useEffect(() => {
+    if (!selectedTarget) return
+    let cancelled = false
+    setGitAvailable(null)
+    setIsGitRepo(false)
+    window.git.isInstalled(selectedTarget).then((v) => {
+      if (!cancelled) setGitAvailable(v)
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [selectedTarget])
+
+  // Debounced git repo check when input changes
+  const resolvePath = useCallback(
+    (value: string): string => {
+      const s = homedir.includes('\\') ? '\\' : '/'
+      const abs = value.startsWith('/') || /^[a-zA-Z]:\\/.test(value)
+      return value.trim() ? (abs ? value.trim() : `${homedir}${s}${value.trim()}`) : homedir
+    },
+    [homedir]
+  )
+
+  useEffect(() => {
+    if (gitAvailable !== true || !homedir) {
+      setIsGitRepo(false)
+      return
+    }
+    let cancelled = false
+    const timer = setTimeout(() => {
+      const fullPath = resolvePath(inputValue)
+      setResolvedRepoPath(fullPath)
+      window.git.isRepo(fullPath, selectedTarget).then((v) => {
+        if (!cancelled) setIsGitRepo(v)
+      })
+    }, GIT_REPO_CHECK_DEBOUNCE_MS)
+    return () => {
+      cancelled = true
+      clearTimeout(timer)
+    }
+  }, [inputValue, gitAvailable, selectedTarget, homedir, resolvePath])
 
   const sep = homedir.includes('\\') ? '\\' : '/'
   const isAbsolute = (p: string): boolean => p.startsWith('/') || /^[a-zA-Z]:\\/.test(p)
@@ -113,6 +161,19 @@ export default function WorkspaceSetup({
         fullPath.startsWith(homedirPrefix) ? fullPath.slice(homedirPrefix.length) : fullPath
       )
     }
+  }
+
+  const splitFocusedPane = useTilingStore((s) => s.splitFocusedPane)
+
+  const handleWorktreeSelect = (worktreePath: string): void => {
+    setWorkspaceCwd(worktreePath)
+    const homedirPrefix = `${homedir}${sep}`
+    setInputValue(
+      worktreePath.startsWith(homedirPrefix)
+        ? worktreePath.slice(homedirPrefix.length)
+        : worktreePath
+    )
+    splitFocusedPane()
   }
 
   const handleBrowse = async (): Promise<void> => {
@@ -180,6 +241,18 @@ export default function WorkspaceSetup({
           Browse
         </Button>
       </form>
+      {gitAvailable === false && (
+        <p className="mt-3 text-[11px] text-[var(--text-secondary)] font-[family-name:var(--font-ui)]">
+          git is not installed
+        </p>
+      )}
+      {gitAvailable === true && isGitRepo && (
+        <WorktreeSelector
+          repoPath={resolvedRepoPath}
+          targetId={selectedTarget}
+          onSelect={handleWorktreeSelect}
+        />
+      )}
       <p className="mt-4 text-[11px] text-[var(--text-secondary)] font-[family-name:var(--font-ui)]">
         Alt+Enter to open terminal
       </p>

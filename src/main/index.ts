@@ -4,6 +4,13 @@ import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import { createIPCHandler } from 'electron-trpc/main'
 import { appRouter } from '../shared/router'
 import { setupPtyManager, killAllPtys } from './pty-manager'
+import {
+  isGitInstalled,
+  isGitRepo,
+  listWorktrees,
+  addWorktree,
+  removeWorktree
+} from './git-worktree'
 import { WINDOW_WIDTH, WINDOW_HEIGHT } from '../shared/constants'
 import {
   initTargets,
@@ -85,6 +92,42 @@ app.whenReady().then(() => {
     if (!target) return []
     return await target.listDir(dirPath)
   })
+
+  ipcMain.handle('git:isInstalled', async (_event, targetId?: string) => {
+    const target = getTarget(targetId || getDefaultTargetId())
+    if (!target) return false
+    return await isGitInstalled(target)
+  })
+
+  ipcMain.handle('git:isRepo', async (_event, path: string, targetId?: string) => {
+    const target = getTarget(targetId || getDefaultTargetId())
+    if (!target) return false
+    return await isGitRepo(path, target)
+  })
+
+  ipcMain.handle('git:listWorktrees', async (_event, repoPath: string, targetId?: string) => {
+    const target = getTarget(targetId || getDefaultTargetId())
+    if (!target) return []
+    return await listWorktrees(repoPath, target)
+  })
+
+  ipcMain.handle(
+    'git:addWorktree',
+    async (_event, repoPath: string, branchName: string, targetId?: string) => {
+      const target = getTarget(targetId || getDefaultTargetId())
+      if (!target) throw new Error('Target not found')
+      return await addWorktree(repoPath, branchName, target)
+    }
+  )
+
+  ipcMain.handle(
+    'git:removeWorktree',
+    async (_event, repoPath: string, worktreePath: string, targetId?: string, force?: boolean) => {
+      const target = getTarget(targetId || getDefaultTargetId())
+      if (!target) throw new Error('Target not found')
+      return await removeWorktree(repoPath, worktreePath, target, force)
+    }
+  )
 
   ipcMain.handle('dialog:openFolder', async () => {
     const win = BrowserWindow.getAllWindows()[0]

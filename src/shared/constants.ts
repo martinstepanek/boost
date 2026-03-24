@@ -47,6 +47,9 @@ export const AUTOSAVE_INTERVAL_MS = 60_000
 export const RESIZE_DEBOUNCE_MS = 50
 export const REFIT_DELAY_MS = 10
 
+// Git
+export const GIT_REPO_CHECK_DEBOUNCE_MS = 500
+
 // Tiling
 export const SPLIT_RATIO_MIN = 0.1
 export const SPLIT_RATIO_MAX = 0.9

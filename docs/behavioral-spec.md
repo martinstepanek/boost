@@ -83,6 +83,43 @@ This document captures all specific behavioral decisions made during development
 - If target workspace is empty, the moved pane becomes the sole layout
 - Source workspace keeps its layout (minus the moved pane); if empty, layout becomes `null`
 
+## Git Worktrees
+
+### Detection
+
+- Git availability is checked **per target** when the target is selected — git may be installed in WSL but not PowerShell, or vice versa
+- `git --version` is used to check installation; any error means git is not available
+- When git is not available on the selected target, a subtle "git is not installed" text is shown
+- Git repo detection runs with a **500ms debounce** after path input changes
+- Detection only runs if git is available on the current target
+
+### Worktree UI
+
+- When the path input resolves to a git directory, a **worktree section** appears below the form
+- Shows existing worktrees as pill buttons with branch names
+- Main worktree is marked with "(main)"
+- "+ New" / "+ Worktree" button to create a new worktree with a branch name input
+- Non-main worktrees have an "x" button (visible on hover) to remove them
+
+### Worktree creation
+
+- New worktrees are created as **sibling directories**: `<repo>-<branchname>` (e.g., `boost-feature-x`)
+- If the branch doesn't exist, `git worktree add <path> -b <branchName>` creates it
+- If the branch already exists, `git worktree add <path> <branchName>` is used instead
+- Worktree removal uses `git worktree remove`
+
+### Workspace binding
+
+- Selecting a worktree sets `workspace.cwd` to the worktree path and opens the first terminal
+- **All** terminals and Claude Code sessions in that workspace use the worktree path as cwd
+- No special `WorkspaceState` field needed — the worktree path IS the cwd
+- Claude Code works correctly in worktrees without special flags (no `--worktree` needed)
+
+### Cleanup
+
+- Worktree cleanup is **manual** — the user removes worktrees via the UI "x" button or via CLI
+- Worktrees persist on disk until explicitly removed
+
 ## Terminal Emulation
 
 ### PTY lifecycle
@@ -148,7 +185,7 @@ This document captures all specific behavioral decisions made during development
 
 ### Target behavior
 
-- Each target defines: `getDefaultShell()`, `getDefaultShellArgs()`, `spawn()`, `getHomedir()`, `listDir()`
+- Each target defines: `getDefaultShell()`, `getDefaultShellArgs()`, `spawn()`, `getHomedir()`, `listDir()`, `execCommand()`
 - **LocalTarget**: `$SHELL --login`, `os.homedir()`, `fs.readdir`
 - **WslTarget**: `wsl.exe -d <distro> --cd <cwd> -- bash -l`, WSL homedir via `wsl.exe -e bash -c "echo $HOME"` (cached), dir listing via UNC path `\\wsl.localhost\<distro>\<path>`
 - **PowershellTarget**: `powershell.exe -NoLogo`, Windows `os.homedir()`, native `fs.readdir`

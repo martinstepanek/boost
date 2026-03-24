@@ -1,5 +1,6 @@
 import { homedir } from 'os'
 import { readdir } from 'fs/promises'
+import { execFileSync } from 'child_process'
 import type { BackendTarget, SpawnConfig } from './backend-target'
 
 export class PowershellTarget implements BackendTarget {
@@ -30,6 +31,17 @@ export class PowershellTarget implements BackendTarget {
 
   async getHomedir(): Promise<string> {
     return homedir()
+  }
+
+  async execCommand(command: string, args: string[], cwd?: string): Promise<string> {
+    // Quote args that contain spaces for PowerShell's -Command parsing
+    const psEscape = (s: string): string => (s.includes(' ') ? `"${s}"` : s)
+    const fullCmd = [command, ...args].map(psEscape).join(' ')
+    return execFileSync('powershell.exe', ['-NoLogo', '-Command', fullCmd], {
+      cwd,
+      encoding: 'utf-8',
+      timeout: 10000
+    }).trim()
   }
 
   async listDir(path: string): Promise<string[]> {

@@ -18,4 +18,5 @@ export interface BackendTarget {
   spawn(command: string, args: string[], cwd: string): SpawnConfig
   getHomedir(): Promise<string>
   listDir(path: string): Promise<string[]>
+  execCommand(command: string, args: string[], cwd?: string): Promise<string>
 }

@@ -51,6 +51,31 @@ const dialogAPI = {
     ipcRenderer.invoke('dialog:listDir', dirPath, targetId)
 }
 
+const gitAPI = {
+  isInstalled: (targetId?: string): Promise<boolean> =>
+    ipcRenderer.invoke('git:isInstalled', targetId),
+  isRepo: (path: string, targetId?: string): Promise<boolean> =>
+    ipcRenderer.invoke('git:isRepo', path, targetId),
+  listWorktrees: (
+    repoPath: string,
+    targetId?: string
+  ): Promise<Array<{ path: string; branch: string; isMain: boolean }>> =>
+    ipcRenderer.invoke('git:listWorktrees', repoPath, targetId),
+  addWorktree: (
+    repoPath: string,
+    branchName: string,
+    targetId?: string
+  ): Promise<{ path: string }> =>
+    ipcRenderer.invoke('git:addWorktree', repoPath, branchName, targetId),
+  removeWorktree: (
+    repoPath: string,
+    worktreePath: string,
+    targetId?: string,
+    force?: boolean
+  ): Promise<void> =>
+    ipcRenderer.invoke('git:removeWorktree', repoPath, worktreePath, targetId, force)
+}
+
 const targetsAPI = {
   getAvailable: (): Promise<Array<{ id: string; label: string }>> =>
     ipcRenderer.invoke('targets:getAvailable'),
@@ -63,6 +88,7 @@ if (process.contextIsolated) {
     contextBridge.exposeInMainWorld('electron', electronAPI)
     contextBridge.exposeInMainWorld('pty', ptyAPI)
     contextBridge.exposeInMainWorld('dialog', dialogAPI)
+    contextBridge.exposeInMainWorld('git', gitAPI)
     contextBridge.exposeInMainWorld('targets', targetsAPI)
   } catch (error) {
     console.error(error)
@@ -74,6 +100,8 @@ if (process.contextIsolated) {
   window.pty = ptyAPI
   // @ts-ignore (define in dts)
   window.dialog = dialogAPI
+  // @ts-ignore (define in dts)
+  window.git = gitAPI
   // @ts-ignore (define in dts)
   window.targets = targetsAPI
 }

@@ -1,5 +1,6 @@
 import { homedir } from 'os'
 import { readdir } from 'fs/promises'
+import { execFileSync } from 'child_process'
 import type { BackendTarget, SpawnConfig } from './backend-target'
 
 function getDefaultShell(): string {
@@ -33,5 +34,9 @@ export class LocalTarget implements BackendTarget {
 
   getDefaultShellArgs(): string[] {
     return ['--login']
+  }
+
+  async execCommand(command: string, args: string[], cwd?: string): Promise<string> {
+    return execFileSync(command, args, { cwd, encoding: 'utf-8', timeout: 10000 }).trim()
   }
 }
