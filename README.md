@@ -14,6 +14,10 @@ Run **Bash** (Linux/macOS), **WSL** (Windows), or **PowerShell** (Windows) — e
 
 Close the app, reopen it — your entire layout, workspaces, working directories, and pane arrangement are restored exactly as you left them.
 
+### Git worktree management
+
+Work on multiple features simultaneously — create and switch between git worktrees from the workspace setup screen. Each workspace can target a different worktree, so all terminals and Claude Code sessions in that workspace operate on the same branch.
+
 ### Claude Code with session persistence
 
 Launch Claude Code from the command palette. Your conversation session ID is tracked per-pane and automatically resumed on next app start — pick up right where you left off.
@@ -54,25 +58,62 @@ yarn run build
 yarn run build:win    # Windows (via CI or with wine)
 ```
 
-## Keybindings
+## Manual
 
-All shortcuts use `Alt` as the modifier key.
+### Workspace setup
 
-| Shortcut              | Action                                    |
-| --------------------- | ----------------------------------------- |
-| `Alt+B`               | Set focused pane split to horizontal      |
-| `Alt+V`               | Set focused pane split to vertical        |
-| `Alt+Enter`           | Open new terminal (uses pane's direction) |
-| `Alt+Shift+Q`         | Close focused pane                        |
-| `Alt+H/J/K/L`         | Focus left/down/up/right                  |
-| `Alt+Arrows`          | Focus left/down/up/right                  |
-| `Alt+Shift+H/J/K/L`   | Move/swap pane in direction               |
-| `Alt+Shift+Arrows`    | Move/swap pane in direction               |
-| `Alt+1`–`Alt+9`       | Switch to workspace                       |
-| `Alt+Shift+1`–`Alt+9` | Move pane to workspace                    |
-| `Alt+D`               | Open command palette                      |
-| `Ctrl+C` (selection)  | Copy to clipboard                         |
-| `Ctrl+V`              | Paste from clipboard                      |
+When you open a new workspace, you see the setup screen. Type a path (with `Tab` autocomplete) and press `Alt+Enter` to open a terminal. Press `Alt+D` to open the launcher and pick an app (Terminal, Claude Code).
+
+If the path is a git repository, worktree controls appear below the input. Use `↓` to enter the worktree selector, `←`/`→` to navigate between branches, and `Enter` to open a workspace in that worktree. Press `+ New` (or navigate to it and press `Enter`) to create a new worktree with a branch name.
+
+### Tiling
+
+Boost uses i3-style binary splits. Each pane remembers its own split direction.
+
+- `Alt+B` — set split direction to horizontal
+- `Alt+V` — set split direction to vertical
+- `Alt+Enter` — split focused pane and open a new terminal
+
+Splits are always 50/50. Three panes in the same direction gives 50/25/25, not 33/33/33.
+
+### Focus and movement
+
+- `Alt+H/J/K/L` or `Alt+Arrows` — move focus left/down/up/right
+- `Alt+Shift+H/J/K/L` or `Alt+Shift+Arrows` — move/swap pane in direction
+
+### Tabs
+
+- `Alt+W` — convert split into tabbed layout
+- `Alt+E` — convert tabs back into split layout
+- `Alt+[` / `Alt+]` — cycle tabs
+
+### Workspaces
+
+- `Alt+1`–`Alt+9` — switch to workspace (created on demand)
+- `Alt+Shift+1`–`Alt+9` — move focused pane to workspace
+
+### Apps and launcher
+
+- `Alt+D` — open command palette (Terminal, Claude Code, future apps)
+- `Alt+Shift+Q` — close focused pane
+
+### Clipboard
+
+- `Ctrl+C` with selection — copy to clipboard
+- `Ctrl+C` without selection — send SIGINT
+- `Ctrl+V` — paste from clipboard
+
+### Worktree selector (setup screen)
+
+| Key                | Action                                     |
+| ------------------ | ------------------------------------------ |
+| `↓`                | Enter worktree selector from path input    |
+| `←` / `→`         | Navigate between worktree pills            |
+| `Enter`            | Select worktree or open "+ New" input      |
+| `↑` / `Escape`    | Return focus to path input                 |
+| `Delete`           | Remove focused worktree (non-main only)    |
+| `Enter` on confirm | Force-delete worktree with uncommitted changes |
+| `Escape` on confirm| Cancel deletion                            |
 
 ## Documentation
 
