@@ -31,6 +31,7 @@ export default function WorkspaceSetup({
   const [resolvedRepoPath, setResolvedRepoPath] = useState('')
   const inputRef = useRef<HTMLInputElement>(null)
   const worktreeSelectorRef = useRef<WorktreeSelectorHandle>(null)
+  const internalCwdUpdate = useRef(false)
 
   useEffect(() => {
     window.targets.getAvailable().then(setTargets)
@@ -51,6 +52,10 @@ export default function WorkspaceSetup({
   }, [selectedTarget])
 
   useEffect(() => {
+    if (internalCwdUpdate.current) {
+      internalCwdUpdate.current = false
+      return
+    }
     setInputValue(cwd)
   }, [cwd])
 
@@ -91,23 +96,30 @@ export default function WorkspaceSetup({
   )
 
   useEffect(() => {
-    if (gitAvailable !== true || !homedir) {
+    if (!homedir) {
       setIsGitRepo(false)
       return
     }
     let cancelled = false
     const timer = setTimeout(() => {
       const fullPath = resolvePath(inputValue)
+      // Keep store cwd in sync with the input so the command palette sees the current path
+      internalCwdUpdate.current = true
+      setWorkspaceCwd(fullPath)
       setResolvedRepoPath(fullPath)
-      window.git.isRepo(fullPath, selectedTarget).then((v) => {
-        if (!cancelled) setIsGitRepo(v)
-      })
+      if (gitAvailable === true) {
+        window.git.isRepo(fullPath, selectedTarget).then((v) => {
+          if (!cancelled) setIsGitRepo(v)
+        })
+      } else {
+        setIsGitRepo(false)
+      }
     }, GIT_REPO_CHECK_DEBOUNCE_MS)
     return () => {
       cancelled = true
       clearTimeout(timer)
     }
-  }, [inputValue, gitAvailable, selectedTarget, homedir, resolvePath])
+  }, [inputValue, gitAvailable, selectedTarget, homedir, resolvePath, setWorkspaceCwd])
 
   const sep = homedir.includes('\\') ? '\\' : '/'
   const isAbsolute = (p: string): boolean => p.startsWith('/') || /^[a-zA-Z]:\\/.test(p)
