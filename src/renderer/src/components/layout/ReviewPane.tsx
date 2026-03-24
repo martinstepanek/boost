@@ -383,10 +383,11 @@ function FileSection({
           <button
             key={`${file.path}-${file.staged}`}
             onClick={() => onFileClick(file)}
-            className="w-full flex items-center gap-2 px-3 py-1 text-left text-xs transition-colors hover:bg-[var(--bg-secondary)]"
+            className="w-full flex items-center gap-2 px-3 py-1 text-left transition-colors hover:bg-[var(--bg-secondary)]"
             style={{
               backgroundColor: isSelected ? 'var(--bg-tertiary)' : undefined,
               fontFamily: 'var(--font-mono)',
+              fontSize: '12px',
               color: 'var(--text-primary)'
             }}
             title={`${STATUS_LABELS[file.status] ?? file.status}: ${file.path}`}
