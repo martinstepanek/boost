@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useTilingStore } from '../../stores/tiling-store'
 import { Button } from '../ui/button'
-import WorktreeSelector from './WorktreeSelector'
+import WorktreeSelector, { type WorktreeSelectorHandle } from './WorktreeSelector'
 import { GIT_REPO_CHECK_DEBOUNCE_MS } from '../../../../shared/constants'
 
 interface TargetInfo {
@@ -30,6 +30,7 @@ export default function WorkspaceSetup({
   const [isGitRepo, setIsGitRepo] = useState(false)
   const [resolvedRepoPath, setResolvedRepoPath] = useState('')
   const inputRef = useRef<HTMLInputElement>(null)
+  const worktreeSelectorRef = useRef<WorktreeSelectorHandle>(null)
 
   useEffect(() => {
     window.targets.getAvailable().then(setTargets)
@@ -116,7 +117,12 @@ export default function WorkspaceSetup({
     setWorkspaceTarget(targetId)
   }
 
-  const handleTab = async (e: React.KeyboardEvent): Promise<void> => {
+  const handleInputKeyDown = async (e: React.KeyboardEvent): Promise<void> => {
+    if (e.key === 'ArrowDown' && gitAvailable === true && isGitRepo) {
+      e.preventDefault()
+      worktreeSelectorRef.current?.focus()
+      return
+    }
     if (e.key !== 'Tab') return
     e.preventDefault()
 
@@ -228,7 +234,7 @@ export default function WorkspaceSetup({
             ref={inputRef}
             value={displayValue}
             onChange={(e) => setInputValue(e.target.value)}
-            onKeyDown={handleTab}
+            onKeyDown={handleInputKeyDown}
             placeholder="project"
             autoFocus
             spellCheck={false}
@@ -248,13 +254,16 @@ export default function WorkspaceSetup({
       )}
       {gitAvailable === true && isGitRepo && (
         <WorktreeSelector
+          ref={worktreeSelectorRef}
           repoPath={resolvedRepoPath}
           targetId={selectedTarget}
           onSelect={handleWorktreeSelect}
+          onFocusPath={() => inputRef.current?.focus()}
         />
       )}
       <p className="mt-4 text-[11px] text-[var(--text-secondary)] font-[family-name:var(--font-ui)]">
         Alt+Enter to open terminal
+        {gitAvailable === true && isGitRepo && ' · ↓ worktrees'}
       </p>
     </div>
   )

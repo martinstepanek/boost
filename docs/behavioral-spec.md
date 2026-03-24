@@ -100,6 +100,18 @@ This document captures all specific behavioral decisions made during development
 - Main worktree is marked with "(main)"
 - "+ New" / "+ Worktree" button to create a new worktree with a branch name input
 - Non-main worktrees have an "x" button (visible on hover) to remove them
+- Hint text shows "↓ worktrees" when worktrees are visible
+
+### Worktree keyboard navigation
+
+- **Down arrow** from path input → focuses first worktree pill (or "+ New" if no worktrees)
+- **Left/Right arrows** navigate between worktree pills and "+ New" button
+- **Enter** on a pill → selects that worktree; on "+ New" → opens branch name input
+- **Up arrow** or **Escape** from pills → returns focus to path input
+- **Delete/Backspace** on a non-main pill → triggers remove flow
+- **Enter** on confirm prompt → force-removes worktree; **Escape** → cancels
+- Focused pill is highlighted with a focus ring
+- Branch name input: **Enter** creates, **Escape** cancels and returns to pill navigation
 
 ### Worktree creation
 
