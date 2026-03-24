@@ -38,6 +38,7 @@ export default function PaneOverlay(): React.JSX.Element {
   )
 
   const focusedPaneId = useTilingStore((s) => s.workspaces[s.activeWorkspace]?.focusedPaneId)
+  const setFocusedPane = useTilingStore((s) => s.setFocusedPane)
 
   // Stable string key per pane: id\tcwd\ttargetId\tapp\tparams(json)
   const allPanesKey = useTilingStore((s) => {
@@ -87,6 +88,7 @@ export default function PaneOverlay(): React.JSX.Element {
         return (
           <div
             key={id}
+            onMouseDown={() => setFocusedPane(id)}
             style={{
               position: 'fixed',
               left: Math.round(rect?.x ?? 0),
