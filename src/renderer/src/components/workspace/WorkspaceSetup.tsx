@@ -262,8 +262,9 @@ export default function WorkspaceSetup({
         />
       )}
       <p className="mt-4 text-[11px] text-[var(--text-secondary)] font-[family-name:var(--font-ui)]">
-        Alt+Enter to open terminal
+        Alt+Enter to open terminal · Alt+D to open launcher
         {gitAvailable === true && isGitRepo && ' · ↓ worktrees'}
+        {gitAvailable === true && !isGitRepo && ' · pick a git repository to manage worktrees'}
       </p>
     </div>
   )
