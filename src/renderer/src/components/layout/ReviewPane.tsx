@@ -165,16 +165,17 @@ export default function ReviewPane({
       const result = await fetchStatus()
       if (result) {
         const sel = selectedFileRef.current
-        if (sel) {
-          const stillExists = result.some((f) => f.path === sel.path && f.staged === sel.staged)
-          if (stillExists) {
-            fetchDiff(sel.path, sel.staged)
-          } else if (result.length > 0) {
-            setSelectedFile({ path: result[0].path, staged: result[0].staged })
-          } else {
-            setSelectedFile(null)
-            setRawDiff(null)
-          }
+        const stillExists =
+          sel && result.some((f) => f.path === sel.path && f.staged === sel.staged)
+        if (stillExists) {
+          fetchDiff(sel.path, sel.staged)
+        } else if (result.length > 0) {
+          const first = { path: result[0].path, staged: result[0].staged }
+          setSelectedFile(first)
+          fetchDiff(first.path, first.staged)
+        } else {
+          setSelectedFile(null)
+          setRawDiff(null)
         }
       }
     }, GIT_STATUS_POLL_MS)
@@ -183,9 +184,14 @@ export default function ReviewPane({
 
   const handleRefresh = useCallback(async () => {
     setLoading(true)
-    await fetchStatus()
-    if (selectedFileRef.current) {
-      await fetchDiff(selectedFileRef.current.path, selectedFileRef.current.staged)
+    const result = await fetchStatus()
+    const sel = selectedFileRef.current
+    if (sel) {
+      await fetchDiff(sel.path, sel.staged)
+    } else if (result && result.length > 0) {
+      const first = { path: result[0].path, staged: result[0].staged }
+      setSelectedFile(first)
+      await fetchDiff(first.path, first.staged)
     }
     setLoading(false)
   }, [fetchStatus, fetchDiff])
