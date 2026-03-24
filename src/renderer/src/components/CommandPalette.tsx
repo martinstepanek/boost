@@ -1,4 +1,4 @@
-import { useEffect, useCallback, useState } from 'react'
+import { useEffect, useCallback, useMemo, useState } from 'react'
 import { Terminal, Sparkles, GitPullRequestDraft } from 'lucide-react'
 import { useTilingStore } from '../stores/tiling-store'
 import { APP_REGISTRY, type AppDefinition } from '../../../shared/app-registry'
@@ -17,6 +17,10 @@ export default function CommandPalette(): React.JSX.Element | null {
   const cwd = useTilingStore((s) => s.workspaces[s.activeWorkspace]?.cwd ?? '')
   const targetId = useTilingStore((s) => s.workspaces[s.activeWorkspace]?.targetId)
   const [disabledApps, setDisabledApps] = useState<Set<string>>(new Set())
+  const sortedApps = useMemo(
+    () => [...APP_REGISTRY].sort((a, b) => a.label.localeCompare(b.label)),
+    []
+  )
 
   // Check git availability when palette opens
   useEffect(() => {
@@ -77,7 +81,7 @@ export default function CommandPalette(): React.JSX.Element | null {
           <CommandInput placeholder="Type a command..." autoFocus />
           <CommandList>
             <CommandEmpty>No results found.</CommandEmpty>
-            {APP_REGISTRY.map((app) => {
+            {sortedApps.map((app) => {
               const Icon = ICON_MAP[app.icon]
               const isDisabled = disabledApps.has(app.id)
               return (
