@@ -56,7 +56,14 @@ export default function WorkspaceSetup({
       internalCwdUpdate.current = false
       return
     }
-    setInputValue(cwd)
+    // Convert absolute cwd to relative for display when it's under homedir
+    if (homedir && cwd === homedir) {
+      setInputValue('')
+    } else if (homedir && (cwd.startsWith(`${homedir}/`) || cwd.startsWith(`${homedir}\\`))) {
+      setInputValue(cwd.slice(homedir.length + 1))
+    } else {
+      setInputValue(cwd)
+    }
   }, [cwd])
 
   useEffect(() => {
@@ -204,10 +211,12 @@ export default function WorkspaceSetup({
   }
 
   const homedirPrefixDisplay = `${homedir}${sep}`
-  const displayValue =
-    cwd && cwd.startsWith(homedirPrefixDisplay) && inputValue === cwd
-      ? cwd.slice(homedirPrefixDisplay.length)
-      : inputValue
+  const displayValue = (() => {
+    if (!cwd || inputValue !== cwd) return inputValue
+    if (cwd === homedir) return ''
+    if (cwd.startsWith(homedirPrefixDisplay)) return cwd.slice(homedirPrefixDisplay.length)
+    return inputValue
+  })()
 
   return (
     <div
