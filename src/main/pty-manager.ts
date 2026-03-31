@@ -158,6 +158,24 @@ export function setupPtyManager(): void {
     ptys.get(paneId)?.write(data)
   })
 
+  ipcMain.on('pty:typeText', (_event, paneId: string, text: string) => {
+    const interpreted = text.replace(/\\([nrt\\])/g, (_match, ch: string) => {
+      switch (ch) {
+        case 'n':
+          return '\r'
+        case 'r':
+          return '\r'
+        case 't':
+          return '\t'
+        case '\\':
+          return '\\'
+        default:
+          return ch
+      }
+    })
+    ptys.get(paneId)?.write(interpreted)
+  })
+
   ipcMain.on('pty:resize', (_event, paneId: string, cols: number, rows: number) => {
     try {
       ptys.get(paneId)?.resize(cols, rows)

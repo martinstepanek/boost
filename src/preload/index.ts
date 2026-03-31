@@ -23,6 +23,9 @@ const ptyAPI = {
   write: (paneId: string, data: string): void => {
     ipcRenderer.send('pty:write', paneId, data)
   },
+  typeText: (paneId: string, text: string): void => {
+    ipcRenderer.send('pty:typeText', paneId, text)
+  },
   resize: (paneId: string, cols: number, rows: number): void => {
     ipcRenderer.send('pty:resize', paneId, cols, rows)
   },
