@@ -11,6 +11,7 @@ interface PtyAPI {
   ) => Promise<number>
   getClaudeSession: (paneId: string) => Promise<string | null>
   write: (paneId: string, data: string) => void
+  typeText: (paneId: string, text: string) => void
   resize: (paneId: string, cols: number, rows: number) => void
   close: (paneId: string) => Promise<void>
   onData: (callback: (paneId: string, data: string) => void) => () => void

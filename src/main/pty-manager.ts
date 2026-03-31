@@ -158,6 +158,23 @@ export function setupPtyManager(): void {
     ptys.get(paneId)?.write(data)
   })
 
+  ipcMain.on('pty:typeText', (_event, paneId: string, text: string) => {
+    const pty = ptys.get(paneId)
+    if (!pty) return
+    // Interpret escape sequences: \n and \r become carriage return (Enter),
+    // \t becomes tab, \\ becomes literal backslash
+    const interpreted = text.replace(/\\(n|r|t|\\)/g, (_match, ch) => {
+      switch (ch) {
+        case 'n': return '\r'
+        case 'r': return '\r'
+        case 't': return '\t'
+        case '\\': return '\\'
+        default: return _match
+      }
+    })
+    pty.write(interpreted)
+  })
+
   ipcMain.on('pty:resize', (_event, paneId: string, cols: number, rows: number) => {
     try {
       ptys.get(paneId)?.resize(cols, rows)
