@@ -37,6 +37,6 @@ export class LocalTarget implements BackendTarget {
   }
 
   async execCommand(command: string, args: string[], cwd?: string): Promise<string> {
-    return execFileSync(command, args, { cwd, encoding: 'utf-8', timeout: 10000 }).trim()
+    return execFileSync(command, args, { cwd, encoding: 'utf-8', timeout: 10000, stdio: ['pipe', 'pipe', 'pipe'] }).trim()
   }
 }

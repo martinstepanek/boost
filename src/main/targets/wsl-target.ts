@@ -74,7 +74,8 @@ export class WslTarget implements BackendTarget {
     wslArgs.push('--', 'bash', '-lic', fullCmd)
     return execFileSync('wsl.exe', wslArgs, {
       encoding: 'utf-8',
-      timeout: 10000
+      timeout: 10000,
+      stdio: ['pipe', 'pipe', 'pipe']
     }).trim()
   }
 

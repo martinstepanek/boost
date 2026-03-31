@@ -40,7 +40,8 @@ export class PowershellTarget implements BackendTarget {
     return execFileSync('powershell.exe', ['-NoLogo', '-Command', fullCmd], {
       cwd,
       encoding: 'utf-8',
-      timeout: 10000
+      timeout: 10000,
+      stdio: ['pipe', 'pipe', 'pipe']
     }).trim()
   }
 
